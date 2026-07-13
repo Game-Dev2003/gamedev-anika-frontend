@@ -1,4 +1,8 @@
 @import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
 
 :root {
   --background: #ffffff;
@@ -23,4 +27,57 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@media print {
+    /* ซ่อนทุกอย่างยกเว้น invoice */
+    body * {
+        visibility: hidden;
+    }
+    #invoice-print,
+    #invoice-print * {
+        visibility: visible;
+    }
+    #invoice-print {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+}
+@media print {
+    .no-print {
+        display: none !important;
+    }
+}
+
+input, select, textarea {
+   color: #111827
+}
+
+input::placeholder , textarea::placeholder {
+    color: #9ca3af;
+}
+
+
+html, body {
+    background-color: white !important; /* ✅ force white */
+    color: #111827 !important;
+}
+
+input, select, textarea {
+    color: #111827;
+    background-color: white;
+}
+html, body {
+    background-color: white !important;
+    color: #111827 !important;
+    /* ✅ ใช้ Noto Sans Lao + Geist Sans */
+    font-family: var(--font-noto-lao), var(--font-geist-sans), sans-serif;
+}
+
+input, select, textarea {
+    color: #111827;
+    background-color: white;
+    font-family: var(--font-noto-lao), var(--font-geist-sans), sans-serif;
 }

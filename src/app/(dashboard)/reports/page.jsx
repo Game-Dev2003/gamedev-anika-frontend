@@ -144,20 +144,34 @@ const exportExcel = (data, sheetName, filename) => {
     // 1. ສ້າງ Worksheet ຈາກຂໍ້ມູນ JSON ປົກກະຕິ
     const ws = XLSX.utils.json_to_sheet(data)
 
-    // 2. 💡 ວົນລັອກກວດສອບທຸກໆ Cell ເພື່ອຝັງ Format ສະກຸນເງິນກີບ ໃຫ້ກັບຖັນທີ່ມີຕົວເລກເງິນ
-    Object.keys(ws).forEach((cellRef) => {
-        // ຂ້າມແຖວທີ 1 ທີ່ເປັນຫົວຂໍ້ (Header)
-        if (cellRef.startsWith('!')) return;
+    // ❌ ໂຄ້ດເກົ່າ (ແຖວ 116-126)
+Object.keys(ws).forEach((cellRef) => {
+    if (cellRef.startsWith('!')) return;
+    const cell = ws[cellRef];
+    if (cell && cell.t === 'n') {
+        cell.z = '#,##0" ₭"'; 
+    }
+});
 
-        const cell = ws[cellRef];
-        
-        // ກວດສອບວ່າ Cell ນັ້ນເປັນຕົວເລກ (Number) ຫຼືບໍ່
-        if (cell && cell.t === 'n') {
-            // 🔐 ຝັງ Format: ມີຈຸດຂັ້ນຫຼັກພັນ ແລະ ມີສະກຸນເງິນ ₭ ທາງທ້າຍ (ຕົວຢ່າງ: 6,100,000 ₭)
-            // ວິທີນີ້ຈະເຮັດໃຫ້ Excel ສະແດງຜົນງາມ ແລະ ຍັງສາມາດກົດສູດ SUM ຄຳນວນຕົວເລກຕໍ່ໄດ້ປົກກະຕິຄຣັບ
+// ✅ ໃຫ້ແກ້ໄຂໃໝ່ເປັນແບບນີ້ຄຣັບນ້າ (ດັກເຊັກຫົວຂໍ້ກ່ອນ ຖ້າບໍ່ແມ່ນເລື່ອງເງິນ...ບໍ່ຕ້ອງໃສ່ ₭)
+Object.keys(ws).forEach((cellRef) => {
+    if (cellRef.startsWith('!')) return;
+    
+    // ດຶງເອົາຊື່ຖັນອອກມາ ເຊັ່ນ A, B, C, D
+    const colLetter = cellRef.replace(/[0-9]/g, ''); 
+    const headerCell = ws[`${colLetter}1`]; // ໄປເບິ່ງຫົວຂໍ້ແຖວທີ 1 ຂອງຖັນນັ້ນ
+    const headerValue = headerCell ? String(headerCell.v) : '';
+
+    const cell = ws[cellRef];
+    if (cell && cell.t === 'n') {
+        // 🔥 ຈະໃສ່ Format ເງິນກີບ ສະເພາະຖັນທີ່ມີຄຳວ່າ "ລາຍຮັບ" ຫຼື "ຕົ້ນທຶນ" ຫຼື "ເງິນ" ເທົ່ານັ້ນ
+        if (headerValue.includes('ລາຍຮັບ') || headerValue.includes('ຕົ້ນທຶນ') || headerValue.includes('₭')) {
             cell.z = '#,##0" ₭"'; 
+        } else {
+            cell.z = '0'; // ຖ້າເປັນລຳດັບ ຫຼື ຈຳນວນບິນ ໃຫ້ສະແດງເປັນຕົວເລກທໍາມະດາ
         }
-    });
+    }
+});
 
     // 3. ຈັດຄວາມກວ້າງຂອງຖັນໃຫ້ພໍດີອັດໂຕນມັດ (Column Width)
     ws['!cols'] = Object.keys(data[0]).map(() => ({ wch: 22 }))

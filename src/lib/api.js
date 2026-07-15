@@ -1,7 +1,10 @@
 import axios from 'axios'
 
+// ✅ ປ່ຽນມາເປັນແບບນີ້ເລີຍຄຣັບນ້າ
 const api = axios.create({
-    baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8800/api',
+    baseURL: typeof window !== 'undefined' 
+        ? `${window.location.origin}/api` // 🚀 ຖ້າຮັນເທິງບຣາວເຊີ ໃຫ້ຍິງເຂົ້າເວັບ Vercel ຕົວເອງ + /api
+        : (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : 'http://localhost:8800/api'),
 })
 
 // ✅ แนบ Token ทุก request

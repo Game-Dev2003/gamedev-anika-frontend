@@ -60,11 +60,12 @@ export default function ProductsPage() {
     }
 
     // ຈັດການປ່ຽນແປງ Path ຂອງຮູບພາບໃຫ້ຊີ້ຫາ Server ຢ່າງຖືກຕ້ອງ
-    const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return null
-        const BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8800'
-        return `${BASE}${imageUrl}`
-    }
+    // ✅ ປ່ຽນໃຫ້ຊີ້ກົງໄປຫາໂດເມນ Render ຄືກັນຄຣັບ
+const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null
+    const BACKEND_RENDER = 'https://gamedev-anika-backend.onrender.com'
+    return `${BACKEND_RENDER}${imageUrl}`
+}
 
     // ຟັງຊັນອັບໂຫລດຮູບພາບຜະລິດຕະພັນໄປຫາເຊີເວີ
     const handleImageUpload = async (e) => {

@@ -181,11 +181,11 @@ export default function SalesPage() {
         'bg-purple-50', 'bg-yellow-50', 'bg-green-50'
     ]
 
-    const getImageUrl = (imageUrl) => {
-        if (!imageUrl) return null
-        const BASE = process.env.NEXT_PUBLIC_API_URL?.replace('/api', '') || 'http://localhost:8800'
-        return `${BASE}${imageUrl}`
-    }
+   const getImageUrl = (imageUrl) => {
+    if (!imageUrl) return null
+    const BACKEND_RENDER = 'https://gamedev-anika-backend.onrender.com'
+    return `${BACKEND_RENDER}${imageUrl}`
+}
 
     const quickCash = [5000, 10000, 20000, 50000, 100000, 500000]
 

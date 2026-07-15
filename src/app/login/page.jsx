@@ -7,7 +7,7 @@ import { Eye, EyeOff, Lock } from 'lucide-react'
 import Cookies from 'js-cookie'
 import '@/lib/i18n'
 import { useTranslation } from 'react-i18next'
-import LanguageToggle from '@/components/LanguageToggle' // ✅ เพิ่ม
+import LanguageToggle from '@/components/LanguageToggle'
 
 export default function LoginPage() {
     const router = useRouter()
@@ -36,9 +36,13 @@ export default function LoginPage() {
                 usernameOrEmail: form.usernameOrEmail,
                 password: form.password
             })
+            
+            // 🚀 [ຈຸດທີ່ປັບປຸງ]: ບັນທຶກທັງ Token, Username, Role ແລະ ID ຂອງພະນັກງານຕົວຈິງ
             localStorage.setItem('token', res.data.token)
+            localStorage.setItem('userId', res.data.id || res.data.userId || 1) // 🔥 ເກັບ ID ເຂົ້າລະບົບເພື່ອໄປຜູກກັບ verifiedBy
             localStorage.setItem('username', res.data.username)
             localStorage.setItem('role', res.data.role)
+            
             Cookies.set('token', res.data.token, { expires: 1 })
             Cookies.set('role', res.data.role, { expires: 1 })
             router.push('/dashboard')
@@ -52,7 +56,6 @@ export default function LoginPage() {
 
     return (
         <div className="min-h-screen bg-gray-100">
-
             {/* Header */}
             <div className="bg-white border-b border-gray-200 px-6 py-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -64,7 +67,7 @@ export default function LoginPage() {
                     </span>
                 </div>
 
-                {/* ✅ Language Toggle + Support */}
+                {/* Language Toggle + Support */}
                 <div className="flex items-center gap-2">
                     <LanguageToggle />
                     <button className="text-sm text-pink-500 border border-pink-200 px-3 py-1 rounded-md hover:bg-pink-50">
@@ -76,7 +79,6 @@ export default function LoginPage() {
             {/* Login Form */}
             <div className="flex items-center justify-center min-h-[calc(100vh-57px)]">
                 <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10 w-full max-w-md">
-
                     {/* Logo */}
                     <div className="flex flex-col items-center mb-8">
                         <div className="w-14 h-14 bg-pink-500 rounded-full flex items-center justify-center mb-4">

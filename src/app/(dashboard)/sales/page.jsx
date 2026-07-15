@@ -24,10 +24,10 @@ export default function SalesPage() {
     const [selectedCustomer, setSelectedCustomer] = useState(null)
     const [showCustomerSearch, setShowCustomerSearch] = useState(false)
     const [customerSearch, setCustomerSearch] = useState('')
-    
+
     // 🎯 State สำหรับแยกยอดเงินผสมหน้าร้าน (Hybrid Payment)
-    const [cashAmount, setCashAmount] = useState('') 
-    const [transferAmount, setTransferAmount] = useState('') 
+    const [cashAmount, setCashAmount] = useState('')
+    const [transferAmount, setTransferAmount] = useState('')
 
     useEffect(() => {
         setMounted(true)
@@ -72,7 +72,7 @@ export default function SalesPage() {
     const addToOrder = (product) => {
         const pId = product.id || product.productId
         const existing = orderItems.find(item => item.productId === pId)
-        
+
         if (existing) {
             setOrderItems(orderItems.map(item =>
                 item.productId === pId
@@ -108,7 +108,7 @@ export default function SalesPage() {
     // ตัวแปรแปลงข้อความในช่อง Input มาคำนวณคณิตศาสตร์หลังบ้าน
     const cashAmountNum = cashAmount ? parseInt(cashAmount.replace(/[^0-9]/g, '')) : 0
     const transferAmountNum = transferAmount ? parseInt(transferAmount.replace(/[^0-9]/g, '')) : 0
-    const totalPaid = cashAmountNum + transferAmountNum 
+    const totalPaid = cashAmountNum + transferAmountNum
     const remainingToPay = subtotal - totalPaid
 
     const completeSale = async () => {
@@ -116,7 +116,7 @@ export default function SalesPage() {
             toast.error(T('pleaseAddItems', 'Please add items to order'))
             return
         }
-        
+
         if (totalPaid < subtotal) {
             toast.error(`ຍັງຂາດເງິນອີກ: ${remainingToPay.toLocaleString('lo-LA')} ₭ / Insufficient amount paid!`)
             return
@@ -140,17 +140,21 @@ export default function SalesPage() {
             const createdSaleId = saleRes.data?.saleId || saleRes.data?.id
 
             // STEP 2: บันทึกข้อมูลเข้าตาราง payments แยกเป็น 2 แถวผูกกับ sale_id เดียวกัน (ManyToOne)
-            
+
             // แถวเงินสด
+            // ✅ ປັບປຸງໃນ SalesPage.tsx ໃຫ້ສົ່ງ "verifiedBy" ຕົງໆ
             if (cashAmountNum > 0) {
+                const currentUserId = localStorage.getItem('userId') || 1;
+
                 await api.post(`/payments?saleId=${createdSaleId}`, {
                     method: 'cash',
                     amount: cashAmountNum,
                     qrPayload: null,
-                    status: 'verified' // เงินสดถือว่ากวดสอบสำเร็จทันที
-                })
+                    status: 'verified',
+                    verifiedAt: new Date().toISOString(),
+                    verifiedBy: parseInt(currentUserId) // 🔥 ປ່ຽນຈາກ verifiedById ມາເປັນ verifiedBy
+                });
             }
-
             // แถวเงินโอน
             if (transferAmountNum > 0) {
                 await api.post(`/payments?saleId=${createdSaleId}`, {
@@ -181,11 +185,11 @@ export default function SalesPage() {
         'bg-purple-50', 'bg-yellow-50', 'bg-green-50'
     ]
 
-   const getImageUrl = (imageUrl) => {
-    if (!imageUrl) return null
-    const BACKEND_RENDER = 'https://gamedev-anika-backend.onrender.com'
-    return `${BACKEND_RENDER}${imageUrl}`
-}
+    const getImageUrl = (imageUrl) => {
+        if (!imageUrl) return null
+        const BACKEND_RENDER = 'https://gamedev-anika-backend.onrender.com'
+        return `${BACKEND_RENDER}${imageUrl}`
+    }
 
     const quickCash = [5000, 10000, 20000, 50000, 100000, 500000]
 
@@ -370,9 +374,9 @@ export default function SalesPage() {
                             <div className="p-3 bg-blue-50 rounded-xl border border-blue-100 flex flex-col items-center justify-center text-center animate-fadeIn space-y-2">
                                 <div className="w-32 h-32 bg-white border border-gray-200 rounded-lg overflow-hidden flex items-center justify-center shadow-sm">
                                     {/* 📸 นำรูป QR ร้านไปแปะไว้ที่ public/images/shop-qr.png ได้เลยครับ */}
-                                    <img 
-                                        src="/images/shop-qr.png" 
-                                        alt="Anika Beauty QR Account" 
+                                    <img
+                                        src="/images/shop-qr.png"
+                                        alt="Anika Beauty QR Account"
                                         className="w-full h-full object-contain"
                                         onError={(e) => {
                                             e.target.style.display = 'none';
@@ -381,7 +385,7 @@ export default function SalesPage() {
                                     />
                                 </div>
                                 <p className="text-[10px] text-gray-500 font-medium">
-                                    📱 ຍອດເງິນທີ່ຕ້ອງສະແກນໂอน: <br/>
+                                    📱 ຍອດເງິນທີ່ຕ້ອງສະແກນໂอน: <br />
                                     <span className="text-blue-600 font-black text-sm">
                                         {transferAmountNum.toLocaleString('lo-LA')} ₭
                                     </span>

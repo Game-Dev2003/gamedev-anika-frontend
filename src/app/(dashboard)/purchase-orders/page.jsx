@@ -137,9 +137,99 @@ export default function PurchaseOrdersPage() {
         }
     }
 
-    const handlePrint = () => {
-        window.print()
+   // ✅ ປ່ຽນຟັງຊັນ handlePrint ໃຫ້ເປັນລະບົບສ້າງ Format ໃບ PO ສວຍງາມອັດໂຕນມັດ
+const handlePrint = () => {
+    if (!selected) return;
+
+    const html = `
+    <html>
+        <head>
+            <title>ໃບສັ່ງຊື້ # ${selected.poNo}</title>
+            <style>
+                @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap');
+                @page { size: A4; margin: 20mm; }
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Noto Sans Lao', sans-serif;
+                    padding: 40px;
+                    color: #333;
+                }
+                .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #ec4899; padding-bottom: 15px; }
+                .shop-title { font-size: 24px; font-weight: bold; color: #ec4899; }
+                .po-title { font-size: 24px; font-weight: bold; text-align: right; color: #374151; }
+                .info-grid { display: grid; grid-cols: 2; gap: 20px; margin-bottom: 30px; font-size: 14px; }
+                .info-block { line-height: 1.6; }
+                .bold { font-weight: bold; }
+                .label { color: #6b7280; }
+                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                th { background-color: #fce7f3; color: #db2777; padding: 10px; text-align: left; font-weight: bold; border: 1px solid #fbcfe8; }
+                td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+                .text-center { text-align: center; }
+                .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px dashed #e5e7eb; padding-top: 20px; }
+            </style>
+        </head>
+        <body>
+            <div class="header">
+                <div>
+                    <div class="shop-title">✿ Anika Beauty Shop ✿</div>
+                    <p style="font-size: 12px; color: #6b7280; margin-top: 5px;">Point of Sale & Stock Management System</p>
+                </div>
+                <div>
+                    <div class="po-title">ໃບສັ່ງຊື້ສິນຄ້າ</div>
+                    <p style="text-align: right; font-size: 14px; font-weight: bold; color: #db2777;">${selected.poNo}</p>
+                </div>
+            </div>
+
+            <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px;">
+                <div class="info-block">
+                    <p class="bold" style="color: #db2777; margin-bottom: 5px;">🏢 ຜູ້ສະໜອງ (Supplier):</p>
+                    <p class="bold">${selected.supplier?.supplierName || 'N/A'}</p>
+                    <p class="label">ເບີໂທ: ${selected.supplier?.phone || '-'}</p>
+                    <p class="label">ທີ່ຢູ່: ${selected.supplier?.address || '-'}</p>
+                </div>
+                <div class="info-block" style="text-align: right;">
+                    <p><span class="label">📅 ວັນທີສັ່ງຊື້ (Date):</span> <span class="bold">${selected.poDate}</span></p>
+                    <p><span class="label">📋 ສະຖານະ (Status):</span> <span class="bold" style="color: #orange-500">${selected.status}</span></p>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th style="width: 15%" class="text-center">ລຳດັບ</th>
+                        <th style="width: 60%">ລາຍການສິນຄ້າ (Product Name)</th>
+                        <th style="width: 25%" class="text-center">ຈຳນວນທີ່ສັ່ງຊື້ (Qty)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    ${selectedItems.map((item, index) => `
+                        <tr>
+                            <td class="text-center">${index + 1}</td>
+                            <td class="bold">${item.product?.productName || '-'}</td>
+                            <td class="text-center bold" style="color: #db2777; font-size: 15px;">${item.quantity}</td>
+                        </tr>
+                    `).join('')}
+                </tbody>
+            </table>
+
+            <div class="footer">
+                <p>ໃບສັ່ງຊື້ສິນຄ້ານີ້ຖືກສ້າງຂຶ້ນອັດໂຕນມັດຜ່ານລະບົບອານິກາບິວຕີ້ຊັອບ POS</p>
+                <p style="margin-top: 5px;">© 2026 Anika Beauty Shop. All rights reserved.</p>
+            </div>
+        </body>
+    </html>`;
+
+    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+    const url = URL.createObjectURL(blob)
+    const printWindow = window.open(url, '_blank')
+    printWindow.onload = () => {
+        setTimeout(() => {
+            printWindow.print()
+            URL.revokeObjectURL(url)
+            printWindow.onafterprint = () => printWindow.close()
+        }, 600)
     }
+}
 
     const filteredOrders = orders.filter(o =>
         o.poNo?.toLowerCase().includes(search.toLowerCase()) ||

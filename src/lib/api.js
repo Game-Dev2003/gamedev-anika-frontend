@@ -21,19 +21,21 @@ api.interceptors.request.use((config) => {
 });
 
 // ✅ Handle errors
+// ✅ ປັບປຸງສ່ວນ Handle errors ໃນ api.js ໃຫ້ເປັນແບບນີ້ຄຣັບນ້າ
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401 ||
-            error.response?.status === 403) {
-            localStorage.clear()
-            document.cookie =
-                'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-            document.cookie =
-                'role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;'
-            window.location.href = '/login'
+        if (error.response?.status === 401 || error.response?.status === 403) {
+            localStorage.clear();
+            document.cookie = 'token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'role=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            
+            // 🔥 ເຊັກກ່ອນວ່າ ຖ້າປັດຈຸບັນບໍ່ໄດ້ຢູ່ໜ້າ /login ເຖິງຈະຍອມໃຫ້ Redirect
+            if (typeof window !== 'undefined' && window.location.pathname !== '/login') {
+                window.location.href = '/login';
+            }
         }
-        return Promise.reject(error)
+        return Promise.reject(error);
     }
 )
 

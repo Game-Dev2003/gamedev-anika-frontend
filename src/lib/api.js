@@ -1,10 +1,11 @@
 import axios from 'axios'
 
 // ✅ ປ່ຽນມາເປັນແບບນີ້ເລີຍຄຣັບນ້າ
+// ✅ ປ່ຽນແຖວ baseURL ໃຫ້ເປັນແບບນີ້ເລີຍຄຣັບນ້າ (ບໍ່ຕ້ອງໃສ່ + '/api' ເພາະໃນ Env ມີແລ້ວ)
 const api = axios.create({
     baseURL: typeof window !== 'undefined' 
-        ? `${window.location.origin}/api` // 🚀 ຖ້າຮັນເທິງບຣາວເຊີ ໃຫ້ຍິງເຂົ້າເວັບ Vercel ຕົວເອງ + /api
-        : (process.env.NEXT_PUBLIC_API_URL ? `${process.env.NEXT_PUBLIC_API_URL}/api` : 'http://localhost:8800/api'),
+        ? `${window.location.origin}/api` // 🚀 ເວລາແລ່ນເທິງ Browser ໃຫ້ໃຊ້ໂດເມນຕົວເອງ + /api
+        : (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8800/api'), // ຖ້າເປັນ Server-side ໃຫ້ໃຊ້ຄ່າຈາກ Env ຕົງໆ
 })
 
 // ✅ แนบ Token ทุก request

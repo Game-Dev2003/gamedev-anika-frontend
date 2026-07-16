@@ -54,17 +54,17 @@ export default function HistoryPage() {
     }
 
     const handlePrint = () => {
-    const status = getStatus(selected)
-    const statusColor = status === 'paid' || status === 'verified'
-        ? '#16a34a'
-        : status === 'refunded'
-            ? '#ef4444'
-            : '#6b7280'
+        const status = getStatus(selected)
+        const statusColor = status === 'paid' || status === 'verified'
+            ? '#16a34a'
+            : status === 'refunded'
+                ? '#ef4444'
+                : '#6b7280'
 
-    const cashPayment = selected.payments?.find(p => p.method === 'cash')
-    const transferPayment = selected.payments?.find(p => p.method === 'transfer')
+        const cashPayment = selected.payments?.find(p => p.method === 'cash')
+        const transferPayment = selected.payments?.find(p => p.method === 'transfer')
 
-    const html = `
+        const html = `
     <html>
         <head>
             <title>ໃບບິນ #${selected.billNo}</title>
@@ -306,20 +306,27 @@ export default function HistoryPage() {
         </body>
     </html>`
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const printWindow = window.open(url, '_blank')
-    printWindow.onload = () => {
-        setTimeout(() => {
-            printWindow.print()
-            URL.revokeObjectURL(url)
-            printWindow.onafterprint = () => printWindow.close()
-        }, 800)
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const printWindow = window.open(url, '_blank')
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print()
+                URL.revokeObjectURL(url)
+                printWindow.onafterprint = () => printWindow.close()
+            }, 800)
+        }
     }
-}
+
+    // ✅ [ແກ້ໄຂ]: ເບິ່ງທຸກ payment ບໍ່ແມ່ນແຕ່ແຖວທຳອິດ
+    // ລຳດັບຄວາມສຳຄັນ: refunded > paid (ລໍຖ້າກວດ) > verified
     const getStatus = (sale) => {
         if (!sale.payments || sale.payments.length === 0) return 'pending'
-        return sale.payments[0].status
+        // ຖ້າມີແຖວໃດແຖວໜຶ່ງເປັນ refunded → ບິນນີ້ຄືນເງິນແລ້ວ
+        if (sale.payments.some(p => p.status === 'refunded')) return 'refunded'
+        // ຖ້າມີແຖວໃດຍັງລໍຖ້າກວດສອບ (paid) → ບິນຍັງບໍ່ສົມບູນ
+        if (sale.payments.some(p => p.status === 'paid')) return 'paid'
+        return 'verified'
     }
 
     const getStatusStyle = (status) => {
@@ -490,9 +497,10 @@ export default function HistoryPage() {
                         <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 border border-pink-200 text-pink-500 py-2 rounded-lg text-sm hover:bg-pink-50">
                             <Printer size={14} />{T('printReceipt', 'Print Receipt')}
                         </button>
-                        {getStatus(selected) === 'paid' && (
-                            <button onClick={() => handleRefund(selected.saleId)} className="w-full border border-gray-200 text-gray-600 py-2 rounded-lg text-sm hover:bg-gray-50">
-                                {T('issueRefund', 'Issue Refund')}
+                        {/* ✅ [ແກ້ໄຂ]: ສະແດງປຸ່ມຄືນເງິນທັງບິນທີ່ paid ແລະ verified */}
+                        {(getStatus(selected) === 'paid' || getStatus(selected) === 'verified') && (
+                            <button onClick={() => handleRefund(selected.saleId)} className="w-full border border-red-200 text-red-500 py-2 rounded-lg text-sm hover:bg-red-50">
+                                ↩ {T('issueRefund', 'Issue Refund')}
                             </button>
                         )}
                     </div>

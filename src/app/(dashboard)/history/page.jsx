@@ -42,7 +42,7 @@ export default function HistoryPage() {
             const sorted = res.data.sort((a, b) => new Date(b.saleDatetime) - new Date(a.saleDatetime))
             setSales(sorted)
         } catch (err) {
-            toast.error('Failed to load sales')
+            toast.error('ໂຫຼດຂໍ້ມູນການຂາຍບໍ່ສຳເລັດ')
         } finally {
             setLoading(false)
         }
@@ -53,11 +53,11 @@ export default function HistoryPage() {
         setRefunding(true)
         try {
             await api.post(`/sales/${saleId}/refund`)
-            toast.success(T('refundIssued', 'Refund issued!'))
+            toast.success(T('refundIssued', 'ຄືນເງິນສຳເລັດແລ້ວ!'))
             fetchSales()
             setSelected(null)
         } catch (err) {
-            toast.error(err.response?.data?.message || T('refundFailed', 'Refund failed'))
+            toast.error(err.response?.data?.message || T('refundFailed', 'ຄືນເງິນບໍ່ສຳເລັດ'))
         } finally {
             setRefunding(false)
         }
@@ -134,9 +134,9 @@ export default function HistoryPage() {
                 <div class="shop-name">✿ Anika Beauty ✿</div>
                 <div class="shop-sub">LUXURY EXPERIENCE</div>
                 <div class="shop-address">ວຽງຈັນ, ສປປ ລາວ</div>
-                <div class="shop-address">Tel: 020-XXXX-XXXX</div>
+                <div class="shop-address">ໂທ: 020-XXXX-XXXX</div>
                 <div class="divider-solid"></div>
-                <div class="bill-no">ໃບບິນ / RECEIPT #${selected.billNo}</div>
+                <div class="bill-no">ໃບບິນ #${selected.billNo}</div>
                 <div class="divider-dash"></div>
                 <div class="info-row">
                     <span class="label">📅 ວັນທີ:</span>
@@ -147,7 +147,7 @@ export default function HistoryPage() {
                 </div>
                 <div class="info-row">
                     <span class="label">👤 ພະນັກງານ:</span>
-                    <span>${selected.user?.username || 'N/A'}</span>
+                    <span>${selected.user?.username || '-'}</span>
                 </div>
                 <div class="info-row">
                     <span class="label">📋 ສະຖານະ:</span>
@@ -167,7 +167,7 @@ export default function HistoryPage() {
                     <thead>
                         <tr>
                             <th style="width:45%">ລາຍການສິນຄ້າ</th>
-                            <th class="right" style="width:15%">ຈຳ</th>
+                            <th class="right" style="width:15%">ຈຳນວນ</th>
                             <th class="right" style="width:20%">ລາຄາ</th>
                             <th class="right" style="width:20%">ລວມ</th>
                         </tr>
@@ -186,7 +186,7 @@ export default function HistoryPage() {
                 <div class="divider-dash"></div>
                 <div class="total-section">
                     <div class="total-row">
-                        <span>ລວມຍ່ອຍ (Subtotal)</span>
+                        <span>ລວມຍ່ອຍ</span>
                         <span>${Number(selected.grandTotal).toLocaleString('lo-LA')} ₭</span>
                     </div>
                     <div class="grand-total">
@@ -195,14 +195,14 @@ export default function HistoryPage() {
                     </div>
                 </div>
                 <div class="payment-section">
-                    <div style="font-size:9px; color:#888; margin-bottom:3px; text-transform:uppercase;">ການຊຳລະເງິນ / Payment</div>
-                    ${cashPayment ? `<div class="payment-row"><span>💵 ເງິນສົດ (Cash)</span><span class="payment-method">${Number(cashPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
-                    ${transferPayment ? `<div class="payment-row"><span>📱 ເງິນໂອນ (Transfer)</span><span class="payment-method">${Number(transferPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
+                    <div style="font-size:9px; color:#888; margin-bottom:3px;">ການຊຳລະເງິນ</div>
+                    ${cashPayment ? `<div class="payment-row"><span>💵 ເງິນສົດ</span><span class="payment-method">${Number(cashPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
+                    ${transferPayment ? `<div class="payment-row"><span>📱 ເງິນໂອນ</span><span class="payment-method">${Number(transferPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
                     ${!cashPayment && !transferPayment && selected.payments?.[0] ? `<div class="payment-row"><span>💳 ${selected.payments[0].method?.toUpperCase()}</span><span class="payment-method">${Number(selected.payments[0].amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
-                    ${cashPayment && Number(cashPayment.amount) > Number(selected.grandTotal) ? `<div class="change-row"><span>💵 ເງິນທອນ (Change)</span><span>${(Number(cashPayment.amount) - Number(selected.grandTotal)).toLocaleString('lo-LA')} ₭</span></div>` : ''}
+                    ${cashPayment && Number(cashPayment.amount) > Number(selected.grandTotal) ? `<div class="change-row"><span>💵 ເງິນທອນ</span><span>${(Number(cashPayment.amount) - Number(selected.grandTotal)).toLocaleString('lo-LA')} ₭</span></div>` : ''}
                 </div>
                 <div class="divider-dash"></div>
-                <div class="footer">ຂອບໃຈທີ່ໃຊ້ບໍລິການ! 💕<br/>Thank you for shopping with us!<br/>ກະລຸນາມາອີກ / Please come again</div>
+                <div class="footer">ຂອບໃຈທີ່ໃຊ້ບໍລິການ! 💕<br/>ກະລຸນາມາອີກເດີ້</div>
                 <div class="footer-brand">✿ Anika Beauty ✿</div>
             </body>
         </html>`
@@ -219,7 +219,7 @@ export default function HistoryPage() {
         }
     }
 
-    // ✅ [ແກ້ໄຂ]: ເບິ່ງທຸກ payment ບໍ່ແມ່ນແຕ່ແຖວທຳອິດ
+    // ✅ ເບິ່ງທຸກ payment ບໍ່ແມ່ນແຕ່ແຖວທຳອິດ
     // ລຳດັບຄວາມສຳຄັນ: refunded > paid (ລໍຖ້າກວດ) > verified
     const getStatus = (sale) => {
         if (!sale.payments || sale.payments.length === 0) return 'pending'
@@ -228,7 +228,18 @@ export default function HistoryPage() {
         return 'verified'
     }
 
-    // ✅ ປັບປຸງສີປ້າຍສະຖານະໃຫ້ແຍກແຍະງ່າຍ
+    // ✅ ປ້າຍສະຖານະເປັນພາສາລາວ
+    const getStatusLabel = (status) => {
+        switch (status) {
+            case 'verified': return 'ຊຳລະແລ້ວ'
+            case 'paid': return 'ຈ່າຍແລ້ວ'
+            case 'refunded': return 'ຄືນເງິນ'
+            case 'pending': return 'ລໍຖ້າ'
+            default: return status
+        }
+    }
+
+    // ✅ ສີປ້າຍສະຖານະ
     const getStatusStyle = (status) => {
         switch (status) {
             case 'verified': return 'bg-green-100 text-green-600' // ✓ ຢືນຢັນແລ້ວ (ສີຂຽວ)
@@ -262,15 +273,15 @@ export default function HistoryPage() {
                 ) : (
                     <div className="grid grid-cols-3 gap-4 mb-6">
                         <div className="border border-gray-100 rounded-xl p-4">
-                            <p className="text-xs text-gray-400">{T('totalSales', 'TOTAL SALES')}</p>
+                            <p className="text-xs text-gray-400">{T('totalSales', 'ຍອດຂາຍລວມ')}</p>
                             <p className="text-xl font-bold text-gray-800 mt-1">{totalSales.toLocaleString('lo-LA')} ₭</p>
                         </div>
                         <div className="border border-gray-100 rounded-xl p-4">
-                            <p className="text-xs text-gray-400">{T('totalOrders', 'TOTAL ORDERS')}</p>
+                            <p className="text-xs text-gray-400">{T('totalOrders', 'ຈຳນວນໃບບິນ')}</p>
                             <p className="text-xl font-bold text-gray-800 mt-1">{totalOrders}</p>
                         </div>
                         <div className="border border-gray-100 rounded-xl p-4">
-                            <p className="text-xs text-gray-400">{T('totalRefunds', 'TOTAL REFUNDS')}</p>
+                            <p className="text-xs text-gray-400">{T('totalRefunds', 'ຈຳນວນການຄືນເງິນ')}</p>
                             <p className="text-xl font-bold text-gray-800 mt-1">{totalRefunds}</p>
                         </div>
                     </div>
@@ -280,21 +291,21 @@ export default function HistoryPage() {
                 <div className="flex items-center gap-3 mb-4 flex-wrap">
                     <div className="relative flex-1 min-w-48">
                         <Search size={16} className="absolute left-3 top-3 text-gray-400" />
-                        <input type="text" placeholder={T('searchHistory', 'Search by Order ID, Customer, Date...')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-300" />
+                        <input type="text" placeholder={T('searchHistory', 'ຄົ້ນຫາດ້ວຍ ID, ລູກຄ້າ, ວັນທີ...')} value={search} onChange={(e) => setSearch(e.target.value)} className="w-full pl-9 pr-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-pink-300" />
                     </div>
                     <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-white">
                         <Calendar size={14} className="text-gray-400" />
-                        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} selectsStart startDate={startDate} endDate={endDate} placeholderText={T('startDate', 'Start date')} className="text-sm text-gray-600 outline-none w-24 cursor-pointer" dateFormat="dd MMM yyyy" />
+                        <DatePicker selected={startDate} onChange={(date) => setStartDate(date)} selectsStart startDate={startDate} endDate={endDate} placeholderText={T('startDate', 'ວັນທີເລີ່ມຕົ້ນ')} className="text-sm text-gray-600 outline-none w-24 cursor-pointer" dateFormat="dd MMM yyyy" />
                     </div>
                     <span className="text-gray-400 text-sm">→</span>
                     <div className="flex items-center gap-2 border border-gray-200 rounded-lg px-3 py-2 bg-white">
                         <Calendar size={14} className="text-gray-400" />
-                        <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate} placeholderText={T('endDate', 'End date')} className="text-sm text-gray-600 outline-none w-24 cursor-pointer" dateFormat="dd MMM yyyy" />
+                        <DatePicker selected={endDate} onChange={(date) => setEndDate(date)} selectsEnd startDate={startDate} endDate={endDate} minDate={startDate} placeholderText={T('endDate', 'ວັນທີສິ້ນສຸດ')} className="text-sm text-gray-600 outline-none w-24 cursor-pointer" dateFormat="dd MMM yyyy" />
                     </div>
                     {(startDate || endDate) && (
-                        <button onClick={() => { setStartDate(null); setEndDate(null) }} className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-50"><X size={12} />{T('clear', 'Clear')}</button>
+                        <button onClick={() => { setStartDate(null); setEndDate(null) }} className="flex items-center gap-1 text-xs text-red-400 hover:text-red-600 border border-red-200 px-3 py-2 rounded-lg hover:bg-red-50"><X size={12} />{T('clear', 'ລ້າງ')}</button>
                     )}
-                    <button onClick={fetchSales} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><RefreshCw size={14} />{T('refresh', 'Refresh')}</button>
+                    <button onClick={fetchSales} className="flex items-center gap-2 px-4 py-2 border border-gray-200 rounded-lg text-sm text-gray-600 hover:bg-gray-50"><RefreshCw size={14} />{T('refresh', 'ໂຫຼດໃໝ່')}</button>
                 </div>
 
                 {/* Table */}
@@ -302,26 +313,26 @@ export default function HistoryPage() {
                     <table className="w-full">
                         <thead>
                             <tr className="text-xs text-gray-400 border-b border-gray-100">
-                                <th className="text-left py-3 px-2">{T('orderID', 'ORDER ID')}</th>
-                                <th className="text-left py-3 px-2">{T('dateTime', 'DATE/TIME')}</th>
-                                <th className="text-left py-3 px-2">{T('customer', 'CUSTOMER')}</th>
-                                <th className="text-left py-3 px-2">{T('total', 'TOTAL')}</th>
-                                <th className="text-left py-3 px-2">{T('status', 'STATUS')}</th>
+                                <th className="text-left py-3 px-2">{T('orderID', 'ລະຫັດໃບບິນ')}</th>
+                                <th className="text-left py-3 px-2">{T('dateTime', 'ວັນທີ/ເວລາ')}</th>
+                                <th className="text-left py-3 px-2">{T('customer', 'ລູກຄ້າ')}</th>
+                                <th className="text-left py-3 px-2">{T('total', 'ລວມທັງໝົດ')}</th>
+                                <th className="text-left py-3 px-2">{T('status', 'ສະຖານະ')}</th>
                             </tr>
                         </thead>
                         <tbody>
                             {loading ? (
                                 <><SkeletonRow cols={5} /><SkeletonRow cols={5} /><SkeletonRow cols={5} /><SkeletonRow cols={5} /></>
                             ) : filteredSales.length === 0 ? (
-                                <tr><td colSpan={5} className="text-center py-8 text-gray-400">{T('noResults', 'No results found')}</td></tr>
+                                <tr><td colSpan={5} className="text-center py-8 text-gray-400">{T('noResults', 'ບໍ່ພົບຂໍ້ມູນ')}</td></tr>
                             ) : filteredSales.map(sale => (
                                 <tr key={sale.saleId} onClick={() => setSelected(sale)} className={`border-b border-gray-50 cursor-pointer hover:bg-pink-50 transition ${selected?.saleId === sale.saleId ? 'bg-pink-50' : ''}`}>
                                     <td className="py-3 px-2 text-sm font-medium text-pink-500">#{sale.billNo}</td>
-                                    <td className="py-3 px-2 text-sm text-gray-500">{new Date(sale.saleDatetime).toLocaleString('en-US', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
-                                    <td className="py-3 px-2 text-sm text-gray-700">{sale.customer?.customerName || T('walkInCustomer', 'Walk-in Customer')}</td>
+                                    <td className="py-3 px-2 text-sm text-gray-500">{new Date(sale.saleDatetime).toLocaleString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</td>
+                                    <td className="py-3 px-2 text-sm text-gray-700">{sale.customer?.customerName || T('walkInCustomer', 'ລູກຄ້າທົ່ວໄປ')}</td>
                                     <td className="py-3 px-2 text-sm font-medium text-pink-500">{Number(sale.grandTotal).toLocaleString('lo-LA')} ₭</td>
                                     <td className="py-3 px-2">
-                                        <span className={`text-xs px-2 py-1 rounded-full capitalize ${getStatusStyle(getStatus(sale))}`}>{getStatus(sale)}</span>
+                                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusStyle(getStatus(sale))}`}>{getStatusLabel(getStatus(sale))}</span>
                                     </td>
                                 </tr>
                             ))}
@@ -335,8 +346,8 @@ export default function HistoryPage() {
                 <div className="w-80 border-l border-gray-100 flex flex-col p-6">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h3 className="font-bold text-gray-800">{T('transactionDetails', 'Transaction Details')}</h3>
-                            <p className="text-xs text-gray-400">Receipt for #{selected.billNo}</p>
+                            <h3 className="font-bold text-gray-800">{T('transactionDetails', 'ລາຍລະອຽດການຂາຍ')}</h3>
+                            <p className="text-xs text-gray-400">{T('receiptFor', 'ໃບບິນເລກທີ')} #{selected.billNo}</p>
                         </div>
                         <button onClick={() => setSelected(null)} className="text-gray-400 hover:text-gray-600"><X size={18} /></button>
                     </div>
@@ -347,14 +358,14 @@ export default function HistoryPage() {
                         </div>
                         <div className="space-y-2 mb-4">
                             <div className="flex text-xs text-gray-400 pb-1 border-b border-gray-100">
-                                <span className="flex-1">ITEM</span>
-                                <span className="w-16 text-right">PRICE</span>
+                                <span className="flex-1">{T('item', 'ລາຍການ')}</span>
+                                <span className="w-16 text-right">{T('price', 'ລາຄາ')}</span>
                             </div>
                             {selected.items?.map(item => (
                                 <div key={item.saleItemId} className="flex items-start">
                                     <div className="flex-1">
                                         <p className="text-sm text-gray-700">{item.product?.productName}</p>
-                                        <p className="text-xs text-gray-400">{T('qty', 'Qty')}: {item.quantity}</p>
+                                        <p className="text-xs text-gray-400">{T('qty', 'ຈຳນວນ')}: {item.quantity}</p>
                                     </div>
                                     <span className="text-sm font-medium w-16 text-right">{Number(item.lineTotal).toLocaleString('lo-LA')} ₭</span>
                                 </div>
@@ -362,17 +373,17 @@ export default function HistoryPage() {
                         </div>
                         <div className="border-t border-gray-100 pt-3 space-y-1">
                             <div className="flex justify-between text-sm text-gray-500">
-                                <span>{T('subtotal', 'Subtotal')}</span>
+                                <span>{T('subtotal', 'ລວມຍ່ອຍ')}</span>
                                 <span>{Number(selected.grandTotal).toLocaleString('lo-LA')} ₭</span>
                             </div>
                             <div className="flex justify-between text-sm font-bold">
-                                <span>{T('total', 'TOTAL')}</span>
+                                <span>{T('total', 'ລວມທັງໝົດ')}</span>
                                 <span className="text-pink-500">{Number(selected.grandTotal).toLocaleString('lo-LA')} ₭</span>
                             </div>
                         </div>
                     </div>
                     <div className="mt-4 space-y-2">
-                        <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 border border-pink-200 text-pink-500 py-2 rounded-lg text-sm hover:bg-pink-50"><Printer size={14} />{T('printReceipt', 'Print Receipt')}</button>
+                        <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 border border-pink-200 text-pink-500 py-2 rounded-lg text-sm hover:bg-pink-50"><Printer size={14} />{T('printReceipt', 'ພິມໃບບິນ')}</button>
 
                         {/* 🔥 ປຸ່ມຄືນເງິນ: ສະແດງທັງສະຖານະ verified ແລະ paid + confirm + disable ຂະນະກຳລັງຄືນ */}
                         {(getStatus(selected) === 'verified' || getStatus(selected) === 'paid') && (
@@ -385,7 +396,7 @@ export default function HistoryPage() {
                                 disabled={refunding}
                                 className="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 py-2 rounded-lg text-sm font-bold transition shadow-sm disabled:opacity-40"
                             >
-                                {refunding ? '⏳ ...' : `↩ ${T('issueRefund', 'ຄືນເງິນ (Issue Refund)')}`}
+                                {refunding ? '⏳ ກຳລັງຄືນເງິນ...' : `↩ ${T('issueRefund', 'ຄືນເງິນ')}`}
                             </button>
                         )}
                     </div>

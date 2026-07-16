@@ -53,6 +53,9 @@ const resources = {
             cashReceived: 'Cash Received',
             change: 'Change',
             insufficientCash: 'Not enough!',
+            "receiptFor": "Receipt for",
+            "item": "ITEM",
+            "price": "PRICE",
 
             // History
             orderID: 'ORDER ID',
@@ -432,6 +435,9 @@ const resources = {
             noResults: 'ບໍ່ພົບຜົນລັບ',
             qty: 'ຈຳນວນ',
             thankYou: 'ຂອບໃຈທີ່ໃຊ້ບໍລິການ!',
+            "receiptFor": "ໃບບິນເລກທີ",
+            "item": "ລາຍການ",
+            "price": "ລາຄາ",
 
             // Products
             productName: 'ຊື່ສິນຄ້າ',

@@ -34,7 +34,6 @@ export default function PurchaseOrdersPage() {
         fetchProducts()
     }, [])
 
-    // ຕິດຕາມການຄລິກເລືອກໃບສັ່ງຊື້ ເພື່ອດຶງລາຍການສິນຄ້າທາງໃນອອກມາສະແດງ
     useEffect(() => {
         if (selected?.poId) {
             fetchOrderItems(selected.poId)
@@ -45,7 +44,6 @@ export default function PurchaseOrdersPage() {
 
     const T = (key, fallback) => mounted ? t(key) : fallback
 
-    // ຟັງຊັນດຶງຂໍ້ມູນໃບສັ່ງຊື້ທັງໝົດ
     const fetchOrders = async () => {
         try {
             const res = await api.get('/purchase-orders')
@@ -57,7 +55,6 @@ export default function PurchaseOrdersPage() {
         }
     }
 
-    // ຟັງຊັນດຶງລາຍການສິນຄ້າທີ່ຜູກກັບໃບສັ່ງຊື້
     const fetchOrderItems = async (poId) => {
         setLoadingItems(true)
         try {
@@ -92,7 +89,6 @@ export default function PurchaseOrdersPage() {
         setForm({ ...form, items: newItems })
     }
 
-    // ຟັງຊັນບັນທຶກການສ້າງໃບສັ່ງຊື້ໃໝ່
     const handleSubmit = async (e) => {
         e.preventDefault()
         try {
@@ -111,7 +107,6 @@ export default function PurchaseOrdersPage() {
         }
     }
 
-    // 💡 ຟັງຊັນສົ່ງຄຳສັ່ງຍົກເລີກໃບສັ່ງຊື້ທີ່ມີສິນຄ້າ (PENDING -> CANCELLED)
     const handleCancelOrder = async (poId) => {
         if (!window.confirm('ທ່ານແນ່ໃຈຫຼືບໍ່ທີ່ຈະຍົກເລີກໃບສັ່ງຊື້ນີ້?')) return
         try {
@@ -124,7 +119,6 @@ export default function PurchaseOrdersPage() {
         }
     }
 
-    // 💡 ຟັງຊັນສົ່ງຄຳສັ່ງລົບໃບສັ່ງຊື້ເປົ່າອອກຈາກຖານຂໍ້ມູນຖາວອນ (Items = 0)
     const handleDeleteOrder = async (poId) => {
         if (!window.confirm('ໃບສັ່ງຊື້ນີ້ບໍ່ມີລາຍການສິນຄ້າ, ທ່ານຕ້ອງການລົບອອກຈາກລະບົບຖາວອນຫຼືບໍ່?')) return
         try {
@@ -137,99 +131,98 @@ export default function PurchaseOrdersPage() {
         }
     }
 
-   // ✅ ປ່ຽນຟັງຊັນ handlePrint ໃຫ້ເປັນລະບົບສ້າງ Format ໃບ PO ສວຍງາມອັດໂຕນມັດ
-const handlePrint = () => {
-    if (!selected) return;
+    const handlePrint = () => {
+        if (!selected) return;
 
-    const html = `
-    <html>
-        <head>
-            <title>ໃບສັ່ງຊື້ # ${selected.poNo}</title>
-            <style>
-                @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap');
-                @page { size: A4; margin: 20mm; }
-                * { margin: 0; padding: 0; box-sizing: border-box; }
-                body {
-                    font-family: 'Noto Sans Lao', sans-serif;
-                    padding: 40px;
-                    color: #333;
-                }
-                .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #ec4899; padding-bottom: 15px; }
-                .shop-title { font-size: 24px; font-weight: bold; color: #ec4899; }
-                .po-title { font-size: 24px; font-weight: bold; text-align: right; color: #374151; }
-                .info-grid { display: grid; grid-cols: 2; gap: 20px; margin-bottom: 30px; font-size: 14px; }
-                .info-block { line-height: 1.6; }
-                .bold { font-weight: bold; }
-                .label { color: #6b7280; }
-                table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-                th { background-color: #fce7f3; color: #db2777; padding: 10px; text-align: left; font-weight: bold; border: 1px solid #fbcfe8; }
-                td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
-                .text-center { text-align: center; }
-                .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px dashed #e5e7eb; padding-top: 20px; }
-            </style>
-        </head>
-        <body>
-            <div class="header">
-                <div>
-                    <div class="shop-title">✿ Anika Beauty Shop ✿</div>
-                    <p style="font-size: 12px; color: #6b7280; margin-top: 5px;">Point of Sale & Stock Management System</p>
+        const html = `
+        <html>
+            <head>
+                <title>ໃບສັ່ງຊື້ # ${selected.poNo}</title>
+                <style>
+                    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+Lao:wght@400;700&display=swap');
+                    @page { size: A4; margin: 20mm; }
+                    * { margin: 0; padding: 0; box-sizing: border-box; }
+                    body {
+                        font-family: 'Noto Sans Lao', sans-serif;
+                        padding: 40px;
+                        color: #333;
+                    }
+                    .header { display: flex; justify-content: space-between; margin-bottom: 30px; border-bottom: 2px solid #ec4899; padding-bottom: 15px; }
+                    .shop-title { font-size: 24px; font-weight: bold; color: #ec4899; }
+                    .po-title { font-size: 24px; font-weight: bold; text-align: right; color: #374151; }
+                    .info-grid { display: grid; grid-cols: 2; gap: 20px; margin-bottom: 30px; font-size: 14px; }
+                    .info-block { line-height: 1.6; }
+                    .bold { font-weight: bold; }
+                    .label { color: #6b7280; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                    th { background-color: #fce7f3; color: #db2777; padding: 10px; text-align: left; font-weight: bold; border: 1px solid #fbcfe8; }
+                    td { padding: 12px 10px; border-bottom: 1px solid #e5e7eb; border-left: 1px solid #e5e7eb; border-right: 1px solid #e5e7eb; }
+                    .text-center { text-align: center; }
+                    .footer { margin-top: 50px; text-align: center; font-size: 12px; color: #9ca3af; border-top: 1px dashed #e5e7eb; padding-top: 20px; }
+                </style>
+            </head>
+            <body>
+                <div class="header">
+                    <div>
+                        <div class="shop-title">✿ Anika Beauty Shop ✿</div>
+                        <p style="font-size: 12px; color: #6b7280; margin-top: 5px;">Point of Sale & Stock Management System</p>
+                    </div>
+                    <div>
+                        <div class="po-title">ໃບສັ່ງຊື້ສິນຄ້າ</div>
+                        <p style="text-align: right; font-size: 14px; font-weight: bold; color: #db2777;">${selected.poNo}</p>
+                    </div>
                 </div>
-                <div>
-                    <div class="po-title">ໃບສັ່ງຊື້ສິນຄ້າ</div>
-                    <p style="text-align: right; font-size: 14px; font-weight: bold; color: #db2777;">${selected.poNo}</p>
-                </div>
-            </div>
 
-            <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px;">
-                <div class="info-block">
-                    <p class="bold" style="color: #db2777; margin-bottom: 5px;">🏢 ຜູ້ສະໜອງ (Supplier):</p>
-                    <p class="bold">${selected.supplier?.supplierName || 'N/A'}</p>
-                    <p class="label">ເບີໂທ: ${selected.supplier?.phone || '-'}</p>
-                    <p class="label">ທີ່ຢູ່: ${selected.supplier?.address || '-'}</p>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 30px; font-size: 14px;">
+                    <div class="info-block">
+                        <p class="bold" style="color: #db2777; margin-bottom: 5px;">🏢 ຜູ້ສະໜອງ (Supplier):</p>
+                        <p class="bold">${selected.supplier?.supplierName || 'N/A'}</p>
+                        <p class="label">ເບີໂທ: ${selected.supplier?.phone || '-'}</p>
+                        <p class="label">ທີ່ຢູ່: ${selected.supplier?.address || '-'}</p>
+                    </div>
+                    <div class="info-block" style="text-align: right;">
+                        <p><span class="label">📅 ວັນທີສັ່ງຊື້ (Date):</span> <span class="bold">${selected.poDate}</span></p>
+                        <p><span class="label">📋 ສະຖານະ (Status):</span> <span class="bold" style="color: #f97316">${selected.status}</span></p>
+                    </div>
                 </div>
-                <div class="info-block" style="text-align: right;">
-                    <p><span class="label">📅 ວັນທີສັ່ງຊື້ (Date):</span> <span class="bold">${selected.poDate}</span></p>
-                    <p><span class="label">📋 ສະຖານະ (Status):</span> <span class="bold" style="color: #orange-500">${selected.status}</span></p>
-                </div>
-            </div>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th style="width: 15%" class="text-center">ລຳດັບ</th>
-                        <th style="width: 60%">ລາຍການສິນຄ້າ (Product Name)</th>
-                        <th style="width: 25%" class="text-center">ຈຳນວນທີ່ສັ່ງຊື້ (Qty)</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    ${selectedItems.map((item, index) => `
+                <table>
+                    <thead>
                         <tr>
-                            <td class="text-center">${index + 1}</td>
-                            <td class="bold">${item.product?.productName || '-'}</td>
-                            <td class="text-center bold" style="color: #db2777; font-size: 15px;">${item.quantity}</td>
+                            <th style="width: 15%" class="text-center">ລຳດັບ</th>
+                            <th style="width: 60%">ລາຍການສິນຄ້າ (Product Name)</th>
+                            <th style="width: 25%" class="text-center">ຈຳນວນທີ່ສັ່ງຊື້ (Qty)</th>
                         </tr>
-                    `).join('')}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        ${selectedItems.map((item, index) => `
+                            <tr>
+                                <td class="text-center">${index + 1}</td>
+                                <td class="bold">${item.product?.productName || '-'}</td>
+                                <td class="text-center bold" style="color: #db2777; font-size: 15px;">${item.quantity}</td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
 
-            <div class="footer">
-                <p>ໃບສັ່ງຊື້ສິນຄ້ານີ້ຖືກສ້າງຂຶ້ນອັດໂຕນມັດຜ່ານລະບົບອານິກາບິວຕີ້ຊັອບ POS</p>
-                <p style="margin-top: 5px;">© 2026 Anika Beauty Shop. All rights reserved.</p>
-            </div>
-        </body>
-    </html>`;
+                <div class="footer">
+                    <p>ໃບສັ່ງຊື້ສິນຄ້ານີ້ຖືກສ້າງຂຶ້ນອັດໂຕນມັດຜ່ານລະບົບອານິກາບິວຕີ້ຊັອບ POS</p>
+                    <p style="margin-top: 5px;">© 2026 Anika Beauty Shop. All rights reserved.</p>
+                </div>
+            </body>
+        </html>`;
 
-    const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
-    const url = URL.createObjectURL(blob)
-    const printWindow = window.open(url, '_blank')
-    printWindow.onload = () => {
-        setTimeout(() => {
-            printWindow.print()
-            URL.revokeObjectURL(url)
-            printWindow.onafterprint = () => printWindow.close()
-        }, 600)
+        const blob = new Blob([html], { type: 'text/html;charset=utf-8' })
+        const url = URL.createObjectURL(blob)
+        const printWindow = window.open(url, '_blank')
+        printWindow.onload = () => {
+            setTimeout(() => {
+                printWindow.print()
+                URL.revokeObjectURL(url)
+                printWindow.onafterprint = () => printWindow.close()
+            }, 600)
+        }
     }
-}
 
     const filteredOrders = orders.filter(o =>
         o.poNo?.toLowerCase().includes(search.toLowerCase()) ||
@@ -240,8 +233,7 @@ const handlePrint = () => {
     return (
         <div className="flex h-screen bg-white print:p-0">
             <Toaster />
-            {/* ເຄິ່ງຊ້າຍ: ຕາຕະລາງສະແດງລາຍການໃບສັ່ງຊື້ທັງໝົດ */}
-            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden print:hidden">
+            <div className="flex-1 flex flex-col p-4 lg:p-6 overflow-hidden print:hidden text-left">
                 <div className="flex items-center justify-between mb-6">
                     <div>
                         <h1 className="text-lg lg:text-xl font-bold text-gray-800">{T('purchaseOrders', 'Purchase Orders')}</h1>
@@ -273,7 +265,7 @@ const handlePrint = () => {
                                 <tr><td colSpan={5}>
                                     <EmptyState
                                         icon={search ? '🔍' : '📋'}
-                                        title={search ? 'ບໍ່ມີ PO' : 'ບໍ່ມີ Pໃບສັ່ງຊື້'}
+                                        title={search ? 'ບໍ່ມີ PO' : 'ບໍ່ມີ ໃບສັ່ງຊື້'}
                                         description={search ? 'ລອງຄົ້ນຫາດ້ວຍຄຳອື່ນ' : 'ກົດປຸ່ມ ເພີ່ມ ເພື່ອສ້າງ ໃບສັ່ງຊື້ ໃໝ່'}
                                         action={!search ? { label: '+ New PO', onClick: () => setShowModal(true) } : undefined}
                                     />
@@ -301,9 +293,8 @@ const handlePrint = () => {
                 </div>
             </div>
 
-            {/* ເຄິ່ງຂວາ: ສະແດງແຜງລາຍລະອຽດເນື້ອໃນຂອງໃບສັ່ງຊື້ທີ່ຖືກເລືອກ */}
             {selected && (
-                <div className="w-64 lg:w-80 border-l border-gray-100 flex flex-col p-4 lg:p-6 print:w-full print:border-none print:p-0">
+                <div className="w-64 lg:w-80 border-l border-gray-100 flex flex-col p-4 lg:p-6 print:w-full print:border-none print:p-0 text-left">
                     <div className="flex items-center justify-between mb-4 print:hidden">
                         <h3 className="font-bold text-gray-800">{T('orderDetails', 'Order Details')}</h3>
                         <button onClick={() => setSelected(null)}><X size={18} className="text-gray-400" /></button>
@@ -333,7 +324,6 @@ const handlePrint = () => {
                         ) : selectedItems.length === 0 ? (
                             <div className="space-y-2">
                                 <p className="text-xs text-red-400 italic font-medium">⚠️ ໃບສັ່ງຊື້ນີ້ບໍ່ມີລາຍການສິນຄ້າ (ບິນເປົ່າ)</p>
-                                {/* 🌟 ປຸ່ມລົບໃບສັ່ງຊື້ເປົ່າ (Delete): ຈະສະແດງສະເພາະຕອນທີ່ລາຍການສິນຄ້າທາງໃນເປັນ 0 ເທົ່ານັ້ນ */}
                                 <button
                                     onClick={() => handleDeleteOrder(selected.poId)}
                                     className="flex items-center justify-center gap-2 w-full bg-red-600 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-700 transition"
@@ -351,11 +341,11 @@ const handlePrint = () => {
                         )}
                     </div>
 
-                    {/* 🔐 ປ້ອງກັນຄວາມປອດໄພ: ປຸ່ມຍົກເລີກ (Cancel) ຈະກົດໄດ້ສະເພາະບິນທີ່ມີສິນຄ້າ ແລະ ສະຖານະເປັນ PENDING ເທົ່ານັ້ນ */}
-                    {selected.status === 'ລໍຖ້າ' && selectedItems.length > 0 && (
+                    {/* ✅ [ຈຸດທີ່ແກ້ໄຂ]: ປ່ຽນໃຫ້ກວດເຊັກຄຳວ່າ 'PENDING' ຕາມຄ່າຈິງໃນ Database ປຸ່ມຍົກເລີກຈຶ່ງຈະຍອມສະແດງຜົນ */}
+                    {selected.status === 'PENDING' && selectedItems.length > 0 && (
                         <button
                             onClick={() => handleCancelOrder(selected.poId)}
-                            className="mt-2 flex items-center justify-center gap-2 w-full bg-red-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition shadow-sm print:hidden"
+                            className="flex items-center justify-center gap-2 w-full bg-red-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition shadow-sm print:hidden mb-2"
                         >
                             <X size={16} /> ຍົກເລີກໃບສັ່ງຊື້ (Cancel)
                         </button>
@@ -371,10 +361,9 @@ const handlePrint = () => {
                 </div>
             )}
 
-            {/* ໜ້າຕ່າງ Modal ຟອມສ້າງໃບສັ່ງຊື້ໃໝ່ */}
             {showModal && (
                 <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50 p-4 print:hidden">
-                    <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto">
+                    <div className="bg-white rounded-2xl p-6 w-full max-w-lg shadow-xl max-h-[90vh] overflow-y-auto text-left">
                         <div className="flex items-center justify-between mb-4">
                             <h3 className="font-bold text-gray-800">{T('newPurchaseOrder', 'New PO')}</h3>
                             <button onClick={() => setShowModal(false)}><X size={18} className="text-gray-400" /></button>

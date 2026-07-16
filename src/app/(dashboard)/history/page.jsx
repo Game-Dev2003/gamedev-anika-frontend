@@ -18,9 +18,15 @@ export default function HistoryPage() {
     const [loading, setLoading] = useState(true)
     const [startDate, setStartDate] = useState(null)
     const [endDate, setEndDate] = useState(null)
+    const [refunding, setRefunding] = useState(false)
 
-    const totalSales = sales.reduce((sum, s) => sum + Number(s.grandTotal), 0)
+    // ✅ ຍອດຂາຍລວມ = ສະເພາະບິນທີ່ "ບໍ່ຖືກຄືນເງິນ"
+    const totalSales = sales
+        .filter(s => !s.payments?.some(p => p.status === 'refunded'))
+        .reduce((sum, s) => sum + Number(s.grandTotal), 0)
+
     const totalOrders = sales.length
+
     const totalRefunds = sales.filter(s => s.payments?.some(p => p.status === 'refunded')).length
 
     useEffect(() => {
@@ -43,6 +49,8 @@ export default function HistoryPage() {
     }
 
     const handleRefund = async (saleId) => {
+        if (refunding) return // 🛡️ ກັນກົດຊ້ຳລະຫວ່າງກຳລັງຄືນເງິນ
+        setRefunding(true)
         try {
             await api.post(`/sales/${saleId}/refund`)
             toast.success(T('refundIssued', 'Refund issued!'))
@@ -50,6 +58,8 @@ export default function HistoryPage() {
             setSelected(null)
         } catch (err) {
             toast.error(err.response?.data?.message || T('refundFailed', 'Refund failed'))
+        } finally {
+            setRefunding(false)
         }
     }
 
@@ -103,7 +113,7 @@ export default function HistoryPage() {
                     table { width: 100%; border-collapse: collapse; font-size: 10px; margin: 4px 0; }
                     th { text-align: left; font-size: 9px; padding: 3px 0; border-bottom: 1px solid #000; text-transform: uppercase; color: #444; }
                     th.right { text-align: right; }
-                    td { padding: 3px 0; vertical-top: top; font-size: 10px; }
+                    td { padding: 3px 0; vertical-align: top; font-size: 10px; }
                     td.right { text-align: right; }
                     td.center { text-align: center; }
                     .product-name { font-weight: bold; font-size: 10px; }
@@ -180,14 +190,14 @@ export default function HistoryPage() {
                         <span>${Number(selected.grandTotal).toLocaleString('lo-LA')} ₭</span>
                     </div>
                     <div class="grand-total">
-                        <span>ຍອດລວມທังໝົດ</span>
+                        <span>ຍອດລວມທັງໝົດ</span>
                         <span class="grand-amount">${Number(selected.grandTotal).toLocaleString('lo-LA')} ₭</span>
                     </div>
                 </div>
                 <div class="payment-section">
                     <div style="font-size:9px; color:#888; margin-bottom:3px; text-transform:uppercase;">ການຊຳລະເງິນ / Payment</div>
                     ${cashPayment ? `<div class="payment-row"><span>💵 ເງິນສົດ (Cash)</span><span class="payment-method">${Number(cashPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
-                    ${transferPayment ? `<div class="payment-row"><span>📱 ເງິນໂอน (Transfer)</span><span class="payment-method">${Number(transferPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
+                    ${transferPayment ? `<div class="payment-row"><span>📱 ເງິນໂອນ (Transfer)</span><span class="payment-method">${Number(transferPayment.amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
                     ${!cashPayment && !transferPayment && selected.payments?.[0] ? `<div class="payment-row"><span>💳 ${selected.payments[0].method?.toUpperCase()}</span><span class="payment-method">${Number(selected.payments[0].amount).toLocaleString('lo-LA')} ₭</span></div>` : ''}
                     ${cashPayment && Number(cashPayment.amount) > Number(selected.grandTotal) ? `<div class="change-row"><span>💵 ເງິນທອນ (Change)</span><span>${(Number(cashPayment.amount) - Number(selected.grandTotal)).toLocaleString('lo-LA')} ₭</span></div>` : ''}
                 </div>
@@ -209,9 +219,13 @@ export default function HistoryPage() {
         }
     }
 
+    // ✅ [ແກ້ໄຂ]: ເບິ່ງທຸກ payment ບໍ່ແມ່ນແຕ່ແຖວທຳອິດ
+    // ລຳດັບຄວາມສຳຄັນ: refunded > paid (ລໍຖ້າກວດ) > verified
     const getStatus = (sale) => {
         if (!sale.payments || sale.payments.length === 0) return 'pending'
-        return sale.payments[0].status
+        if (sale.payments.some(p => p.status === 'refunded')) return 'refunded'
+        if (sale.payments.some(p => p.status === 'paid')) return 'paid'
+        return 'verified'
     }
 
     // ✅ ປັບປຸງສີປ້າຍສະຖານະໃຫ້ແຍກແຍະງ່າຍ
@@ -359,18 +373,19 @@ export default function HistoryPage() {
                     </div>
                     <div className="mt-4 space-y-2">
                         <button onClick={handlePrint} className="w-full flex items-center justify-center gap-2 border border-pink-200 text-pink-500 py-2 rounded-lg text-sm hover:bg-pink-50"><Printer size={14} />{T('printReceipt', 'Print Receipt')}</button>
-                        
-                        {/* 🔥 [ຈຸດທີ່ປັບປຸງ]: ປຸ່ມຄືນເງິນຈະສະແດງຜົນທັງສະຖານະ verified ແລະ paid ພ້ອມແຈ້ງເຕືອນ Confirm */}
+
+                        {/* 🔥 ປຸ່ມຄືນເງິນ: ສະແດງທັງສະຖານະ verified ແລະ paid + confirm + disable ຂະນະກຳລັງຄືນ */}
                         {(getStatus(selected) === 'verified' || getStatus(selected) === 'paid') && (
-                            <button 
+                            <button
                                 onClick={() => {
-                                    if(window.confirm('ທ່ານແນ່ໃຈຫຼືບໍ່ທີ່ຈະທຳການຄືນເງິນໃຫ້ບິນນີ້?')) {
+                                    if (window.confirm('ທ່ານແນ່ໃຈຫຼືບໍ່ທີ່ຈະທຳການຄືນເງິນໃຫ້ບິນນີ້?')) {
                                         handleRefund(selected.saleId)
                                     }
-                                }} 
-                                className="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 py-2 rounded-lg text-sm font-bold transition shadow-sm"
+                                }}
+                                disabled={refunding}
+                                className="w-full bg-red-50 hover:bg-red-100 border border-red-200 text-red-500 py-2 rounded-lg text-sm font-bold transition shadow-sm disabled:opacity-40"
                             >
-                                ↩ {T('issueRefund', 'ຄືນເງິນ (Issue Refund)')}
+                                {refunding ? '⏳ ...' : `↩ ${T('issueRefund', 'ຄືນເງິນ (Issue Refund)')}`}
                             </button>
                         )}
                     </div>

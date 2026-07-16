@@ -273,8 +273,8 @@ const handlePrint = () => {
                                 <tr><td colSpan={5}>
                                     <EmptyState
                                         icon={search ? '🔍' : '📋'}
-                                        title={search ? 'ไม่พบ PO' : 'ยังไม่มี Purchase Order'}
-                                        description={search ? 'ลองค้นหาด้วยคำอื่น' : 'กดปุ่ม Add เพื่อสร้าง PO'}
+                                        title={search ? 'ບໍ່ມີ PO' : 'ບໍ່ມີ Pໃບສັ່ງຊື້'}
+                                        description={search ? 'ລອງຄົ້ນຫາດ້ວຍຄຳອື່ນ' : 'ກົດປຸ່ມ ເພີ່ມ ເພື່ອສ້າງ ໃບສັ່ງຊື້ ໃໝ່'}
                                         action={!search ? { label: '+ New PO', onClick: () => setShowModal(true) } : undefined}
                                     />
                                 </td></tr>
@@ -312,7 +312,7 @@ const handlePrint = () => {
                     <div className="space-y-3 mb-4 border-b pb-4 border-gray-100">
                         <div className="hidden print:block mb-4">
                             <h2 className="text-xl font-bold text-gray-800">Anika Beauty Shop</h2>
-                            <p className="text-sm text-gray-500">ใบสั่งซื้อสินค้า / Purchase Order</p>
+                            <p className="text-sm text-gray-500">ໃບສັ່ງຊື້ສິນຄ້າ / Purchase Order</p>
                         </div>
                         <div><p className="text-xs text-gray-400">{T('poNumber', 'PO NUMBER')}</p><p className="text-sm font-medium text-pink-500">{selected.poNo}</p></div>
                         <div><p className="text-xs text-gray-400">{T('supplier', 'SUPPLIER')}</p><p className="text-sm text-gray-700">{selected.supplier?.supplierName}</p></div>

@@ -46,8 +46,19 @@ export default function DashboardPage() {
         }
     }
 
-    const totalRevenue = sales.reduce((sum, s) => sum + Number(s.grandTotal || 0), 0)
-    const totalOrders = sales.length
+    // ✅ [ຈຸດທີ່ປັບປຸງ]: ຄຳນວນຍອດລາຍຮັບລວມ ໂດຍຫັກບິນທີ່ເປັນ 'refunded' ອອກບໍ່ເອົາມາຮວມ
+    const totalRevenue = sales.reduce((sum, s) => {
+        const status = s.payments && s.payments.length > 0 ? s.payments[0].status : 'pending'
+        if (status === 'refunded') return sum // ຖ້າ Refund ແລ້ວ ໃຫ້ຂ້າມໄປ ບໍ່ຕ້ອງບວກເງິນເຂົ້າ
+        return sum + Number(s.grandTotal || 0)
+    }, 0)
+
+    // ✅ [ຈຸດທີ່ປັບປຸງ]: ຈຳນວນໃບບິນຂາຍຫຼັກ ກໍບໍ່ນັບບິນທີ່ຖືກ Refund ເຊັ່ນກັນ
+    const totalOrders = sales.filter(s => {
+        const status = s.payments && s.payments.length > 0 ? s.payments[0].status : 'pending'
+        return status !== 'refunded'
+    }).length
+
     const totalCustomers = customers.length
     const lowStockProducts = products.filter(p => Number(p.quantityOnHand || 0) <= 10).length
 
@@ -58,28 +69,46 @@ export default function DashboardPage() {
         { label: T('lowStockAlert', 'Low Stock'), value: lowStockProducts, icon: Package, color: 'bg-orange-100 text-orange-500', change: T('productsNeedRestock', 'products need restock') },
     ]
 
+    // ✅ [ຈຸດທີ່ປັບປຸງ]: ກຣາຟລາຍວັນ ຈະບໍ່ເອົາຍອດບິນ Refund ມາສະແດງຜົນ
     const chartByDay = sales.reduce((acc, sale) => {
         if (!sale.saleDatetime) return acc
+        
+        const status = sale.payments && sale.payments.length > 0 ? sale.payments[0].status : 'pending'
+        if (status === 'refunded') return acc // ບໍ່ເອົາຍອດບິນ Refund ມາຂຶ້ນກຣາຟ
+
         const date = new Date(sale.saleDatetime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })
         const existing = acc.find(d => d.date === date)
-        if (existing) { existing.revenue += Number(sale.grandTotal || 0); existing.orders += 1 }
-        else acc.push({ date, revenue: Number(sale.grandTotal || 0), orders: 1 })
+        if (existing) { 
+            existing.revenue += Number(sale.grandTotal || 0)
+            existing.orders += 1 
+        } else {
+            acc.push({ date, revenue: Number(sale.grandTotal || 0), orders: 1 })
+        }
         return acc
     }, []).sort((a, b) => new Date(a.date) - new Date(b.date)).slice(-14)
 
+    // ✅ [ຈຸດທີ່ປັບປຸງ]: ກຣາຟລາຍເດືອນ ຈະບໍ່ເອົາຍອດບິນ Refund ມາສະແດງຜົນ
     const chartByMonth = sales.reduce((acc, sale) => {
         if (!sale.saleDatetime) return acc
+
+        const status = sale.payments && sale.payments.length > 0 ? sale.payments[0].status : 'pending'
+        if (status === 'refunded') return acc // ບໍ່ເອົາຍອດບິນ Refund ມາຂຶ້ນກຣາຟ
+
         const month = new Date(sale.saleDatetime).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })
         const existing = acc.find(d => d.date === month)
-        if (existing) { existing.revenue += Number(sale.grandTotal || 0); existing.orders += 1 }
-        else acc.push({ date: month, revenue: Number(sale.grandTotal || 0), orders: 1 })
+        if (existing) { 
+            existing.revenue += Number(sale.grandTotal || 0)
+            existing.orders += 1 
+        } else {
+            acc.push({ date: month, revenue: Number(sale.grandTotal || 0), orders: 1 })
+        }
         return acc
     }, [])
 
     const chartData = chartType === 'day' ? chartByDay : chartByMonth
 
     return (
-        <div className="p-4 lg:p-6 overflow-y-auto bg-white min-h-screen">
+        <div className="p-4 lg:p-6 overflow-y-auto bg-white min-h-screen text-left">
             {/* Welcome */}
             <div className="mb-6">
                 <h1 className="text-xl lg:text-2xl font-bold text-gray-800">

@@ -352,7 +352,7 @@ const handlePrint = () => {
                     </div>
 
                     {/* 🔐 ປ້ອງກັນຄວາມປອດໄພ: ປຸ່ມຍົກເລີກ (Cancel) ຈະກົດໄດ້ສະເພາະບິນທີ່ມີສິນຄ້າ ແລະ ສະຖານະເປັນ PENDING ເທົ່ານັ້ນ */}
-                    {selected.status === 'PENDING' && selectedItems.length > 0 && (
+                    {selected.status === 'ລໍຖ້າ' && selectedItems.length > 0 && (
                         <button
                             onClick={() => handleCancelOrder(selected.poId)}
                             className="mt-2 flex items-center justify-center gap-2 w-full bg-red-500 text-white py-2 rounded-lg text-sm font-medium hover:bg-red-600 transition shadow-sm print:hidden"

@@ -22,7 +22,6 @@ export default function ReportsPage() {
     const [startDate, setStartDate] = useState(new Date(new Date().getFullYear(), new Date().getMonth(), 1))
     const [endDate, setEndDate] = useState(new Date())
     
-    // 🎯 State ສຳລັບແຜງເຈາະເລິກສ່ອງເບິ່ງຂໍ້ມູນລາຍບິນ/ລາຍລັອດນຳເຂົ້າ
     const [selectedDateSales, setSelectedDateSales] = useState(null)
     const [selectedDateImports, setSelectedDateImports] = useState(null)
     const [selectedEmployeeSales, setSelectedEmployeeSales] = useState(null)
@@ -35,7 +34,6 @@ export default function ReportsPage() {
 
     const T = (key, fallback) => mounted ? t(key) : fallback
 
-    // ດຶງຂໍ້ມູນທັງໝົດຈາກ API ຫຼັງບ້ານ
     const fetchAll = async () => {
         try {
             const [salesRes, usersRes, productsRes, importsRes] = await Promise.all([
@@ -55,7 +53,6 @@ export default function ReportsPage() {
         }
     }
 
-    // ກັ່ນຕອງຂໍ້ມູນການຂາຍຕາມຊ່ວງວັນທີທີ່ເລືອກ
     const filteredSales = sales.filter(s => {
         if (!s.saleDatetime) return false
         const saleDate = new Date(s.saleDatetime)
@@ -63,7 +60,6 @@ export default function ReportsPage() {
             saleDate <= new Date(new Date(endDate).setHours(23, 59, 59, 999))
     })
 
-    // ກັ່ນຕອງຂໍ້ມູນການນຳເຂົ້າຕາມຊ່ວງວันທີທີ່ເລືອກ
     const filteredImports = imports.filter(imp => {
         if (!imp.importDate) return false
         const impDate = new Date(imp.importDate)
@@ -71,8 +67,11 @@ export default function ReportsPage() {
             impDate <= new Date(new Date(endDate).setHours(23, 59, 59, 999))
     })
 
-    // ຄຳນວນລາຍຮັບແຍກຕາມວັນ
+    // 📊 [ປັບປຸງ Logic]: ຄຳນວນລາຍຮັບແຍກຕາມວັນ ໂດຍຫັກບິນ Refund ອອກ
     const incomeByDay = filteredSales.reduce((acc, sale) => {
+        const status = sale.payments && sale.payments.length > 0 ? sale.payments[0].status : 'pending';
+        if (status === 'refunded') return acc;
+
         const date = new Date(sale.saleDatetime).toLocaleDateString('lo-LA', {
             month: 'short', day: 'numeric', year: 'numeric'
         })
@@ -80,8 +79,11 @@ export default function ReportsPage() {
         return acc
     }, {})
 
-    // คຳນວນລາຍຮັບແຍກຕາມເດືອນ
+    // 📊 [ປັບປຸງ Logic]: ຄຳນວນລາຍຮັບແຍກຕາມເດືອນ ໂດຍຫັກບິນ Refund ອອກ
     const incomeByMonth = filteredSales.reduce((acc, sale) => {
+        const status = sale.payments && sale.payments.length > 0 ? sale.payments[0].status : 'pending';
+        if (status === 'refunded') return acc;
+
         const month = new Date(sale.saleDatetime).toLocaleDateString('lo-LA', {
             month: 'long', year: 'numeric'
         })
@@ -89,7 +91,6 @@ export default function ReportsPage() {
         return acc
     }, {})
 
-    // ຄຳນວນລາຍຈ່າຍຕົ້ນທຶນແຍກຕາມວັນ
     const expenseByDay = filteredImports.reduce((acc, imp) => {
         const date = new Date(imp.importDate).toLocaleDateString('lo-LA', {
             month: 'short', day: 'numeric', year: 'numeric'
@@ -100,7 +101,6 @@ export default function ReportsPage() {
         return acc
     }, {})
 
-    // ຄຳນວນລາຍຈ່າຍຕົ້ນທຶນແຍກຕາມເດືອນ
     const expenseByMonth = filteredImports.reduce((acc, imp) => {
         const month = new Date(imp.importDate).toLocaleDateString('lo-LA', {
             month: 'long', year: 'numeric'
@@ -111,11 +111,14 @@ export default function ReportsPage() {
         return acc
     }, {})
 
-    // ສະຫຼຸບລາຍງານຜົນງານການຂາຍຂອງພະນັກງານ
     const employeeReport = users.map(user => {
         const userSales = sales.filter(s => s.user?.id === user.id)
-        const totalRevenue = userSales.reduce((sum, s) => sum + Number(s.grandTotal || 0), 0)
-        return { ...user, totalSales: userSales.length, totalRevenue }
+        const totalRevenue = userSales.reduce((sum, s) => {
+            const status = s.payments && s.payments.length > 0 ? s.payments[0].status : 'pending';
+            if (status === 'refunded') return sum;
+            return sum + Number(s.grandTotal || 0);
+        }, 0)
+        return { ...user, totalSales: userSales.filter(s => (s.payments && s.payments[0]?.status !== 'refunded')).length, totalRevenue }
     })
 
     const today = new Date()
@@ -127,62 +130,44 @@ export default function ReportsPage() {
         return diffDays > 0 && diffDays <= 30
     })
 
-    const totalRevenue = filteredSales.reduce((sum, s) => sum + Number(s.grandTotal || 0), 0)
-    const totalExpenseCost = filteredImports.reduce((sum, imp) => sum + (Number(imp.costPrice || 0) * Number(imp.quantity || 0)), 0)
+    // 📊 [ປັບປຸງ Logic]: ຄຳນວນຍອດຮວມລາຍຮັບຫຼັກ ໃຫ້ຫັກບິນ Refund ອອກ
+    const totalRevenue = filteredSales.reduce((sum, s) => {
+        const status = s.payments && s.payments.length > 0 ? s.payments[0].status : 'pending';
+        if (status === 'refunded') return sum;
+        return sum + Number(s.grandTotal || 0);
+    }, 0)
 
+    const totalExpenseCost = filteredImports.reduce((sum, imp) => sum + (Number(imp.costPrice || 0) * Number(imp.quantity || 0)), 0)
     const profitOrLoss = totalRevenue - totalExpenseCost
     const isProfit = profitOrLoss >= 0
 
-    // 💡 ຟັງຊັນການດຶງໄຟລ໌ Excel ອອກມາໃຫ້ເປັນພາສາລາວ ແລະ ຈັດຂະໜາດຖັນອັດໂຕນມັດ
-    // 💡 ຟັງຊັນການດຶງໄຟລ໌ Excel ອອກມາ ພ້ອມຝັງ Format ສະກຸນເງິນກີບ (₭)
-const exportExcel = (data, sheetName, filename) => {
-    if (data.length === 0) {
-        toast.error('ບໍ່ມີຂໍ້ມູນໃນການດຶງອອກ / No data to export!')
-        return
-    }
-
-    // 1. ສ້າງ Worksheet ຈາກຂໍ້ມູນ JSON ປົກກະຕິ
-    const ws = XLSX.utils.json_to_sheet(data)
-
-    // ❌ ໂຄ້ດເກົ່າ (ແຖວ 116-126)
-Object.keys(ws).forEach((cellRef) => {
-    if (cellRef.startsWith('!')) return;
-    const cell = ws[cellRef];
-    if (cell && cell.t === 'n') {
-        cell.z = '#,##0" ₭"'; 
-    }
-});
-
-// ✅ ໃຫ້ແກ້ໄຂໃໝ່ເປັນແບບນີ້ຄຣັບນ້າ (ດັກເຊັກຫົວຂໍ້ກ່ອນ ຖ້າບໍ່ແມ່ນເລື່ອງເງິນ...ບໍ່ຕ້ອງໃສ່ ₭)
-Object.keys(ws).forEach((cellRef) => {
-    if (cellRef.startsWith('!')) return;
-    
-    // ດຶງເອົາຊື່ຖັນອອກມາ ເຊັ່ນ A, B, C, D
-    const colLetter = cellRef.replace(/[0-9]/g, ''); 
-    const headerCell = ws[`${colLetter}1`]; // ໄປເບິ່ງຫົວຂໍ້ແຖວທີ 1 ຂອງຖັນນັ້ນ
-    const headerValue = headerCell ? String(headerCell.v) : '';
-
-    const cell = ws[cellRef];
-    if (cell && cell.t === 'n') {
-        // 🔥 ຈະໃສ່ Format ເງິນກີບ ສະເພາະຖັນທີ່ມີຄຳວ່າ "ລາຍຮັບ" ຫຼື "ຕົ້ນທຶນ" ຫຼື "ເງິນ" ເທົ່ານັ້ນ
-        if (headerValue.includes('ລາຍຮັບ') || headerValue.includes('ຕົ້ນທຶນ') || headerValue.includes('₭')) {
-            cell.z = '#,##0" ₭"'; 
-        } else {
-            cell.z = '0'; // ຖ້າເປັນລຳດັບ ຫຼື ຈຳນວນບິນ ໃຫ້ສະແດງເປັນຕົວເລກທໍາມະດາ
+    const exportExcel = (data, sheetName, filename) => {
+        if (data.length === 0) {
+            toast.error('ບໍ່ມີຂໍ້ມູນໃນການດຶງອອກ / No data to export!')
+            return
         }
+        const ws = XLSX.utils.json_to_sheet(data)
+        Object.keys(ws).forEach((cellRef) => {
+            if (cellRef.startsWith('!')) return;
+            const colLetter = cellRef.replace(/[0-9]/g, ''); 
+            const headerCell = ws[`${colLetter}1`];
+            const headerValue = headerCell ? String(headerCell.v) : '';
+            const cell = ws[cellRef];
+            if (cell && cell.t === 'n') {
+                if (headerValue.includes('ລາຍຮັບ') || headerValue.includes('ຕົ້ນທຶນ') || headerValue.includes('₭')) {
+                    cell.z = '#,##0" ₭"'; 
+                } else {
+                    cell.z = '0';
+                }
+            }
+        });
+        ws['!cols'] = Object.keys(data[0]).map(() => ({ wch: 22 }))
+        const wb = XLSX.utils.book_new()
+        XLSX.utils.book_append_sheet(wb, ws, sheetName)
+        XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
+        toast.success('ດຶງຂໍ້ມູນອອກເປັນ Excel ພ້ອມ Format ເງິນສຳເລັດແລ້ວ!')
     }
-});
 
-    // 3. ຈັດຄວາມກວ້າງຂອງຖັນໃຫ້ພໍດີອັດໂຕນມັດ (Column Width)
-    ws['!cols'] = Object.keys(data[0]).map(() => ({ wch: 22 }))
-
-    // 4. ສ້າງ Workbook ແລະ ດຳເນີນການດາວໂຫລດໄຟລ໌
-    const wb = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(wb, ws, sheetName)
-    XLSX.writeFile(wb, `${filename}_${new Date().toISOString().split('T')[0]}.xlsx`)
-    
-    toast.success('ດຶງຂໍ້ມູນອອກເປັນ Excel ພ້ອມ Format ເງິນສຳເລັດແລ້ວ!')
-}
     const tabs = [
         { id: 'income-day', label: T('incomePerDay', 'ລາຍຮັບ/ວັນ'), icon: TrendingUp },
         { id: 'income-month', label: T('incomePerMonth', 'ລາຍຮັບ/ເດືອນ'), icon: TrendingUp },
@@ -214,7 +199,6 @@ Object.keys(ws).forEach((cellRef) => {
                 <p className="text-sm text-gray-400 mt-1">{T('reportsSubtitle', 'ຕິດຕາມສະຖິຕິລາຍຮັບ-ລາຍຈ່າຍ ແລະ ວິເຄາະຂໍ້ມູນບັນຊີພາຍໃນຮ້ານ Anika Beauty')}</p>
             </div>
 
-            {/* ແຖບລາຍການ (Tabs) */}
             <div className="flex gap-2 mb-6 border-b border-gray-200 pb-3 overflow-x-auto">
                 {tabs.map(tab => {
                     const Icon = tab.icon
@@ -226,40 +210,36 @@ Object.keys(ws).forEach((cellRef) => {
                 })}
             </div>
 
-            {/* 📈 ກ່ອງຄຳນວນກຳໄລ-ຂາດທຶນສຸດທິພາບຮວມທາງບັນຊີ */}
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6 text-left">
                 <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><p className="text-xs text-gray-400 font-bold">ລາຍຮັບລວມ (Income)</p><p className="text-lg lg:text-xl font-black text-pink-500 mt-1">{totalRevenue.toLocaleString('lo-LA')} ₭</p></div>
                 <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><p className="text-xs text-gray-400 font-bold">ຕົ້ນທຶນລວມ (Expense)</p><p className="text-lg lg:text-xl font-black text-red-500 mt-1">{totalExpenseCost.toLocaleString('lo-LA')} ₭</p></div>
-                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><p className="text-xs text-gray-400 font-bold">ຈຳນວນໃບບິນຂາຍ</p><p className="text-lg lg:text-xl font-black text-blue-500 mt-1">{filteredSales.length} ບິນ</p></div>
-                <div className={`border rounded-2xl p-4 shadow-sm transition-all bg-white ${isProfit ? 'border-green-200' : 'border-amber-200'}`}><p className={`text-xs font-bold ${isProfit ? 'text-green-600' : 'text-amber-600'}`}>{isProfit ? 'ກຳໄລສຸດທິ (Net Profit)' : 'ຂາດທຶນສຸດທິ (Net Loss)'}</p><p className={`text-lg lg:text-xl font-black mt-1 ${isProfit ? 'text-green-600' : 'text-red-500'}`}>{isProfit ? '+' : ''}{profitOrLoss.toLocaleString('lo-LA')} ₭</p></div>
+                <div className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm"><p className="text-xs text-gray-400 font-bold">ຈຳນວນໃບບິນຂາຍ</p><p className="text-lg lg:text-xl font-black text-blue-500 mt-1">{filteredSales.filter(s => s.payments?.[0]?.status !== 'refunded').length} ບິນ</p></div>
+                <div className={`border rounded-2xl p-4 shadow-sm transition-all bg-white ${isProfit ? 'border-green-200' : 'border-amber-200'}`}><p className={`text-xs font-bold ${isProfit ? 'text-green-600' : 'text-amber-600'}`}>{isProfit ? 'ກຳໄລສຸດທິ (Net Profit)' : 'າດທຶນສຸດທິ (Net Loss)'}</p><p className={`text-lg lg:text-xl font-black mt-1 ${isProfit ? 'text-green-600' : 'text-red-500'}`}>{isProfit ? '+' : ''}{profitOrLoss.toLocaleString('lo-LA')} ₭</p></div>
             </div>
 
             <div className="flex-1 overflow-auto bg-white rounded-2xl border border-gray-200 p-4 lg:p-6 shadow-sm">
-                
-                {/* 1. ແທັບລາຍຮັບລາຍວັນ */}
                 {activeTab === 'income-day' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-bold text-gray-800 text-sm lg:text-base">📊 {T('dailyIncomeReport', 'ລາຍງານລາຍຮັບລາຍວັນ')}</h2>
-                            {/* 💡 ປັບປຸງຄ່າປ້າຍ Excel ໃຫ້ເປັນພາສາລາວທ້ອງຖິ່ນຄົບຖ້ວນ */}
-                            <button onClick={() => exportExcel(Object.entries(incomeByDay).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, total], i) => ({ 'ລຳດັບ': i + 1, 'ວັນທີ': date, 'ຈຳນວນໃບບິນ': filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date).length, 'ລາຍຮັບລວມ (₭)': total })), 'ລາຍຮັບລາຍວັນ', 'income-by-day')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
+                            <button onClick={() => exportExcel(Object.entries(incomeByDay).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, total], i) => ({ 'ລຳດັບ': i + 1, 'ວັນທີ': date, 'ຈຳນວນໃບບິນ': filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date && s.payments?.[0]?.status !== 'refunded').length, 'ລາຍຮັບລວມ (₭)': total })), 'ລາຍຮັບລາຍວັນ', 'income-by-day')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
                         </div>
                         <DateFilter />
                         <table className="w-full">
                             <thead>
                                 <tr className="text-xs text-pink-500 border-b border-gray-100 bg-gray-50/50 font-bold text-left">
                                     <th className="py-3 px-2">#</th>
-                                    <th className="py-3 px-2">{T('date', 'ວັນທີ')}</th>
+                                    <th className="py-3 px-2">{T('date', 'ວันທີ')}</th>
                                     <th className="py-3 px-2 text-right">{T('bills', 'ຈຳນວນໃບບິນ')}</th>
                                     <th className="py-3 px-2 text-right">{T('income', 'ລາຍຮັບ (₭)')}</th>
                                 </tr>
                             </thead>
                             <tbody className="text-left">
                                 {loading ? <><SkeletonRow cols={4} /><SkeletonRow cols={4} /></> : Object.entries(incomeByDay).length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-gray-400 text-xs">ບໍ່ມີຂໍ້ມູນໃນຊ່ວງເວລານີ້</td></tr> : Object.entries(incomeByDay).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, total], index) => (
-                                    <tr key={`inc-day-${date}`} onClick={() => { const daySales = filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date); setDetailTitle(date); setSelectedDateSales(daySales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
+                                    <tr key={`inc-day-${date}`} onClick={() => { const daySales = filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date && s.payments?.[0]?.status !== 'refunded'); setDetailTitle(date); setSelectedDateSales(daySales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
                                         <td className="py-3 px-2 text-xs text-gray-400">{index + 1}</td>
                                         <td className="py-3 px-2 text-xs text-gray-700 font-bold">{date}</td>
-                                        <td className="py-3 px-2 text-xs text-right text-blue-600 font-bold underline">{filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date).length} ບິນ</td>
+                                        <td className="py-3 px-2 text-xs text-right text-blue-600 font-bold underline">{filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'short', day: 'numeric', year: 'numeric' }) === date && s.payments?.[0]?.status !== 'refunded').length} ບິນ</td>
                                         <td className="py-3 px-2 text-sm font-black text-pink-500 text-right">{total.toLocaleString('lo-LA')} ₭</td>
                                     </tr>
                                 ))}
@@ -268,12 +248,11 @@ Object.keys(ws).forEach((cellRef) => {
                     </div>
                 )}
 
-                {/* 2. ແທັບລາຍຮັບລາຍເດືອນ */}
                 {activeTab === 'income-month' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-bold text-gray-800 text-sm lg:text-base">📅 {T('monthlyIncomeReport', 'ລາຍງານລາຍຮັບລາຍເດືອນ')}</h2>
-                            <button onClick={() => exportExcel(Object.entries(incomeByMonth).map(([month, total], i) => ({ 'ລຳດັບ': i + 1, 'ປະຈຳເດືອນ': month, 'ຈຳນວນໃບບິນຂາຍ': filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month).length, 'ລາຍຮັບລວມ (₭)': total })), 'ລາຍຮັບລາຍເດືອນ', 'income-by-month')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
+                            <button onClick={() => exportExcel(Object.entries(incomeByMonth).map(([month, total], i) => ({ 'ລຳດັບ': i + 1, 'ປະຈຳເດືອນ': month, 'ຈຳນວນໃບບິນຂາຍ': filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month && s.payments?.[0]?.status !== 'refunded').length, 'ລາຍຮັບລວມ (₭)': total })), 'ລາຍຮັບລາຍເດືອນ', 'income-by-month')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
                         </div>
                         <DateFilter />
                         <table className="w-full">
@@ -287,10 +266,10 @@ Object.keys(ws).forEach((cellRef) => {
                             </thead>
                             <tbody className="text-left">
                                 {loading ? <><SkeletonRow cols={4} /><SkeletonRow cols={4} /></> : Object.entries(incomeByMonth).length === 0 ? <tr><td colSpan={4} className="text-center py-8 text-gray-400 text-xs">ບໍ່ມີຂໍ້ມູນ</td></tr> : Object.entries(incomeByMonth).map(([month, total], index) => (
-                                    <tr key={`inc-month-${month}`} onClick={() => { const monthSales = filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month); setDetailTitle(month); setSelectedDateSales(monthSales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
+                                    <tr key={`inc-month-${month}`} onClick={() => { const monthSales = filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month && s.payments?.[0]?.status !== 'refunded'); setDetailTitle(month); setSelectedDateSales(monthSales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
                                         <td className="py-3 px-2 text-xs text-gray-400">{index + 1}</td>
                                         <td className="py-3 px-2 text-xs text-gray-700 font-bold">{month}</td>
-                                        <td className="py-3 px-2 text-xs text-right text-blue-600 font-bold underline">{filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month).length} ບິນ</td>
+                                        <td className="py-3 px-2 text-xs text-right text-blue-600 font-bold underline">{filteredSales.filter(s => new Date(s.saleDatetime).toLocaleDateString('lo-LA', { month: 'long', year: 'numeric' }) === month && s.payments?.[0]?.status !== 'refunded').length} ບິນ</td>
                                         <td className="py-3 px-2 text-sm font-black text-pink-500 text-right">{total.toLocaleString('lo-LA')} ₭</td>
                                     </tr>
                                 ))}
@@ -299,12 +278,11 @@ Object.keys(ws).forEach((cellRef) => {
                     </div>
                 )}
 
-                {/* 3. ແທັບລາຍຈ່າຍລາຍວັນ */}
                 {activeTab === 'expense-day' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-bold text-gray-800 text-sm lg:text-base">📦 ລາຍງານລາຍຈ່າຍຕົ້ນທຶນລາຍວັນ</h2>
-                            <button onClick={() => exportExcel(Object.entries(expenseByDay).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, data], i) => ({ 'ລຳດັບ': i + 1, 'ວັນທີນຳເຂົ້າ': date, 'ຈຳນວນລາຍການສິນຄ້າ': data.count, 'ຕົ້ນທຶນລວມ (₭)': data.totalCost })), 'ລາຍຈ່າຍລາຍວັນ', 'expense-by-day')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
+                            <button onClick={() => exportExcel(Object.entries(expenseByDay).sort((a, b) => new Date(b[0]) - new Date(a[0])).map(([date, data], i) => ({ 'ລຳດັບ': i + 1, 'ວັນທີນຳເຂົ້າ': date, 'ຈຳນວນລາຍການສິນຄ້າ': data.count, 'ຕົ້ນທຶນລວມ (₭)': data.totalCost })), 'ລາຍຈ່າຍລายວັນ', 'expense-by-day')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
                         </div>
                         <DateFilter />
                         <table className="w-full">
@@ -330,12 +308,11 @@ Object.keys(ws).forEach((cellRef) => {
                     </div>
                 )}
 
-                {/* 4. ແທັບລາຍຈ່າຍລາຍເດືອນ */}
                 {activeTab === 'expense-month' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
-                            <h2 className="font-bold text-gray-800 text-sm lg:text-base">🏢 ລายງານລາຍຈ່າຍຕົ້ນທຶນລາຍເດືອນ</h2>
-                            <button onClick={() => exportExcel(Object.entries(expenseByMonth).map(([month, data], i) => ({ 'ລຳດັບ': i + 1, 'ປະຈຳເດືອນ': month, 'ຈຳນວນລາຍການສິນຄ້າ': data.count, 'ຕົ້ນທຶນລວມ (₭)': data.totalCost })), 'ລາຍຈ່າຍລາຍເດືອນ', 'expense-by-month')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
+                            <h2 className="font-bold text-gray-800 text-sm lg:text-base">🏢 ລາຍງານລາຍຈ່າຍຕົ້ນທຶນລາຍεດືອນ</h2>
+                            <button onClick={() => exportExcel(Object.entries(expenseByMonth).map(([month, data], i) => ({ 'ລຳດັບ': i + 1, 'ປະຈຳເດືອນ': month, 'ຈຳນວນລາຍການສິນຄ້າ': data.count, 'ຕົ້ນທຶນລວມ (₭)': data.totalCost })), 'ລາຍຈ່າຍລายເດືອນ', 'expense-by-month')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
                         </div>
                         <DateFilter />
                         <table className="w-full">
@@ -343,7 +320,7 @@ Object.keys(ws).forEach((cellRef) => {
                                 <tr className="text-xs text-pink-500 border-b border-gray-100 bg-gray-50/50 font-bold text-left">
                                     <th className="py-3 px-2">#</th>
                                     <th className="py-3 px-2">ປະຈຳເດືອນ</th>
-                                    <th className="py-3 px-2 text-right">ຈຳนວນລາຍການ</th>
+                                    <th className="py-3 px-2 text-right">ຈຳນວນລາຍການ</th>
                                     <th className="py-3 px-2 text-right">ຕົ້ນທຶນລວມ (₭)</th>
                                 </tr>
                             </thead>
@@ -361,12 +338,11 @@ Object.keys(ws).forEach((cellRef) => {
                     </div>
                 )}
 
-                {/* 5. ແທັບລາຍງານພະນັກງານ */}
                 {activeTab === 'employee' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-bold text-gray-800 text-sm lg:text-base">👩‍💼 ລາຍງານຍອດຂາຍຂອງພະນັກງານ</h2>
-                            <button onClick={() => exportExcel(employeeReport.map((u, i) => ({ 'ລຳດັບ': i + 1, 'ຊື່ພະນັກງານ': u.username, 'ອີເມວ': u.email || '-', 'ຕຳແໜ່ງ': u.role, 'ສະຖານະບັນຊີ': u.isActive ? 'ເປີດໃຊ້ງານ' : 'ປິດບັນຊີ', 'ຈຳນວນບິນຂາຍໄດ້': u.totalSales, 'ຍອດລາຍຮັບທີ່ເຮັດໄດ້ (₭)': u.totalRevenue })), 'ລາຍງານພະນັກງານ', 'employee-report')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />Export Excel</button>
+                            <button onClick={() => exportExcel(employeeReport.map((u, i) => ({ 'ລຳດັບ': i + 1, 'ชື່ພະນັກງານ': u.username, 'ອີເມວ': u.email || '-', 'ຕຳແໜ່ງ': u.role, 'ສະຖານະບັນຊີ': u.isActive ? 'ເປີດໃຊ້ງານ' : 'ປິດບັນຊີ', 'ຈຳນວນບິນຂາຍໄດ້': u.totalSales, 'ຍອດລາຍຮັບທີ່ເຮັດໄດ້ (₭)': u.totalRevenue })), 'ລາຍງານພະນັກງານ', 'employee-report')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />Export Excel</button>
                         </div>
                         <table className="w-full">
                             <thead>
@@ -381,7 +357,7 @@ Object.keys(ws).forEach((cellRef) => {
                             </thead>
                             <tbody className="text-left">
                                 {loading ? <><SkeletonRow cols={6} /><SkeletonRow cols={6} /></> : employeeReport.map((user, idx) => (
-                                    <tr key={`report-emp-${user.id || idx}`} onClick={() => { const empSales = filteredSales.filter(s => s.user?.id === user.id); setDetailTitle(user.username); setSelectedEmployeeSales(empSales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
+                                    <tr key={`report-emp-${user.id || idx}`} onClick={() => { const empSales = filteredSales.filter(s => s.user?.id === user.id && s.payments?.[0]?.status !== 'refunded'); setDetailTitle(user.username); setSelectedEmployeeSales(empSales); }} className="border-b border-gray-50 hover:bg-pink-50/30 transition cursor-pointer">
                                         <td className="py-3 px-2">
                                             <div className="flex items-center gap-2">
                                                 <div className="w-8 h-8 bg-pink-100 rounded-full flex items-center justify-center text-xs font-bold text-pink-500">{user.username?.slice(0, 2).toUpperCase()}</div>
@@ -400,12 +376,11 @@ Object.keys(ws).forEach((cellRef) => {
                     </div>
                 )}
 
-                {/* 6. ແທັບສິນຄ້າໝົດອາຍຸ */}
                 {activeTab === 'expired' && (
                     <div>
                         <div className="flex justify-between items-center mb-4">
                             <h2 className="font-bold text-gray-800 text-sm lg:text-base">🚨 ລາຍງານກວດສອບສິນຄ້າໝົດອາຍຸ</h2>
-                            <button onClick={() => exportExcel([...expiredProducts, ...nearExpiredProducts].map((p, i) => ({ 'ລຳດັບ': i + 1, 'ຊື່ສິນຄ້າ': p.productName, 'ໝວດໝູ່': p.category?.categoryName || '-', 'ວັນໝົດອາຍຸ': p.expiryDate ? new Date(p.expiryDate).toLocaleDateString('lo-LA') : '-', 'ຈຳນວນສະຕ໋ອກຄ້າງ': p.quantityOnHand, 'ສະຖານະສະຕ໋ອກ': new Date(p.expiryDate) <= today ? 'ໝົດອາຍຸແລ້ວ' : 'ໃກ้ໝົດອາຍຸ (ພາຍໃນ 30 ວັນ)' })), 'ສິນຄ້າໝົດອາຍຸ', 'expired-products')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
+                            <button onClick={() => exportExcel([...expiredProducts, ...nearExpiredProducts].map((p, i) => ({ 'ລຳດັບ': i + 1, 'ຊື່ສິນຄ້າ': p.productName, 'ໝວດໝູ່': p.category?.categoryName || '-', 'ວັນໝົດອາຍຸ': p.expiryDate ? new Date(p.expiryDate).toLocaleDateString('lo-LA') : '-', 'ຈຳນວນສະຕ໋ອກຄ້າງ': p.quantityOnHand, 'ສະຖານະສະຕ໋ອກ': new Date(p.expiryDate) <= today ? 'ໝົດອາຍຸແລ້ວ' : 'ໃກ້ໝົດອາຍຸ (ພາຍໃນ 30 ວັນ)' })), 'ສິນຄ້າໝົດອາຍຸ', 'expired-products')} className="flex items-center gap-2 px-3 py-1.5 border border-gray-200 rounded-xl text-xs font-semibold text-gray-600 hover:bg-gray-50 transition"><Download size={13} />{T('exportExcel', 'Export Excel')}</button>
                         </div>
                         <div className="grid grid-cols-2 gap-4 mb-6">
                             <div className="bg-red-50 rounded-xl p-4 border border-red-100"><div className="flex items-center gap-2 mb-1"><AlertTriangle size={16} className="text-red-500" /><p className="text-xs text-red-500 font-bold">ໝົດອາຍຸແລ້ວ (Expired)</p></div><p className="text-2xl font-black text-red-500">{expiredProducts.length} ລາຍການ</p></div>
@@ -526,7 +501,7 @@ Object.keys(ws).forEach((cellRef) => {
                                         ))}
                                     </div>
                                     <div className="text-right text-xs font-bold text-gray-700 mt-2 border-t pt-1">
-                                        ຍອດລວມບິນ: <span className="text-green-600 text-sm font-black">{Number(sale.grandTotal).toLocaleString('lo-LA')} ₭</span>
+                                        ยອດລວມບິນ: <span className="text-green-600 text-sm font-black">{Number(sale.grandTotal).toLocaleString('lo-LA')} ₭</span>
                                     </div>
                                 </div>
                             ))}
